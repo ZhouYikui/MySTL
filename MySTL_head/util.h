@@ -77,15 +77,60 @@ namespace mystl
     {
         typedef T1 first_type;
         typedef T2 second_type;
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 成员变量
+        /// ------------------------------------------------------------------------------------------------------------
+
         first_type first;
         second_type second;
 
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 构造函数
+        /// ------------------------------------------------------------------------------------------------------------
+
         /// @brief 默认构造函数
-        /// @note std::is_default_constructible 判断是否默认可构造
         template<typename Other1 = T1, typename Other2 = T2, typename = typename std::enable_if<
                 std::is_default_constructible<Other1>::value &&
                 std::is_default_constructible<Other2>::value, void>::type>
         constexpr pair() : first(), second() {}
+
+        /// @brief 隐式 有参构造函数
+        template<typename U1 = T1, typename U2 = T2, typename std::enable_if<
+                std::is_copy_constructible<U1>::value &&
+                std::is_copy_constructible<U2>::value &&
+                std::is_convertible<const U1 &, T1>::value &&
+                std::is_convertible<const U2 &, T2>::value, int>::type = 0>
+        constexpr pair(const T1 &a, const T2 &b) : first(a), second(b) {}
+
+        /// @brief 隐式 转发构造函数
+        template<typename Other1, typename Other2, typename std::enable_if<
+                std::is_constructible<T1, Other1>::value &&
+                std::is_constructible<T2, Other2>::value &&
+                std::is_convertible<Other1 &&, T1>::value &&
+                std::is_convertible<Other2 &&, T2>::value, int>::type = 0>
+        constexpr pair(Other1 &&a, Other2 &&b) : first(mystl::forward<Other1>(a)), second(mystl::forward<Other2>(b)) {}
+
+        /// @brief 显式 有参构造函数
+        template<typename U1 = T1, typename U2 = T2, typename std::enable_if<
+                std::is_copy_constructible<U1>::value &&
+                std::is_copy_constructible<U2>::value &&
+                (!std::is_convertible<U1, T1>::value || !std::is_convertible<U2, T2>::value), int>::type = 0>
+        explicit constexpr pair(const T1 &a, const T2 &b) : first(a), second(b) {}
+
+        /// @brief 显式 转发构造函数
+        template<typename Other1, typename Other2, typename std::enable_if<
+                std::is_constructible<T1, Other1>::value &&
+                std::is_constructible<T2, Other2>::value &&
+                (!std::is_convertible<Other1, T1>::value || !std::is_convertible<Other2, T2>::value), int>::type = 0>
+        explicit constexpr
+        pair(Other1 &&a, Other2 &&b) : first(mystl::forward<Other1>(a)), second(mystl::forward<Other2>(b)) {}
+
+        /// @brief 拷贝构造函数
+        pair(const pair &lhs) = default;
+
+        /// @brief 移动构造函数
+        pair(pair &&rhs) noexcept = default;
     };
 
 }
