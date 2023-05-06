@@ -122,7 +122,11 @@ namespace mystl
     /// @brief copy_n series
     /// ================================================================================================================
 
-    template <typename InputIter, typename Size, typename OutputIter>
+    /**
+     * @brief unchecked_copy_n 调用不同重载
+     * */
+
+    template<typename InputIter, typename Size, typename OutputIter>
     mystl::pair<InputIter, OutputIter>
     unchecked_copy_n(InputIter first, Size n, OutputIter result, mystl::input_iterator_tag)
     {
@@ -133,16 +137,15 @@ namespace mystl
         return mystl::pair<InputIter, OutputIter>(first, result);
     }
 
-    template <class RandomIter, class Size, class OutputIter>
+    template<typename RandomIter, typename Size, typename OutputIter>
     mystl::pair<RandomIter, OutputIter>
-    unchecked_copy_n(RandomIter first, Size n, OutputIter result,
-                     mystl::random_access_iterator_tag)
+    unchecked_copy_n(RandomIter first, Size n, OutputIter result, mystl::random_access_iterator_tag)
     {
         auto last = first + n;
         return mystl::pair<RandomIter, OutputIter>(last, mystl::copy(first, last, result));
     }
 
-    template <typename InputIter, typename Size, typename OutputIter>
+    template<typename InputIter, typename Size, typename OutputIter>
     mystl::pair<InputIter, OutputIter> copy_n(InputIter first, Size n, OutputIter result)
     {
 
