@@ -18,6 +18,10 @@
 namespace mystl
 {
 
+    /// ================================================================================================================
+    /// @brief mystl::m_true/false_type
+    /// ================================================================================================================
+
     /**
      * @brief 主要目的是定义一个value并被初始化为T v，且可以静态访问
      * @brief 在此基础上定义了两个别名模板，表示true and false
@@ -31,22 +35,23 @@ namespace mystl
         static constexpr T value = v;
     };
 
-    template<bool b>
+    template <bool b>
     using m_bool_constant = m_integral_constant<bool, b>;
 
+    /// @brief true->static constexpr bool value = true;
     typedef m_bool_constant<true> m_true_type;
+    /// @brief false->static constexpr bool value = false;
     typedef m_bool_constant<false> m_false_type;
 
-    /**
-     * @brief pair的前向声明
-     * */
+    /// ================================================================================================================
+    /// @brief mystl::pair
+    /// ================================================================================================================
+
+    /// @brief pair的前向声明
     template<typename T1, typename T2>
     struct pair;
 
-    /**
-     * @brief 模板特化的方法 对于非pair，默认初始化为false_type，对于pair，默认初始化为true_type
-     * */
-
+    /// @brief 模板特化的方法 对于非pair，默认初始化为false_type，对于pair，默认初始化为true_type
     template <typename T>
     struct is_pair : mystl::m_false_type {};
 

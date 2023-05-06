@@ -124,6 +124,9 @@ namespace mystl
 
     /**
      * @brief unchecked_copy_n 调用不同重载
+     * @param input_iterator_tag 逐个复制
+     * @param random_access_iterator_tag 一次性复制
+     * @return 返回一个pair 指向复制的尾部
      * */
 
     template<typename InputIter, typename Size, typename OutputIter>
@@ -148,7 +151,7 @@ namespace mystl
     template<typename InputIter, typename Size, typename OutputIter>
     mystl::pair<InputIter, OutputIter> copy_n(InputIter first, Size n, OutputIter result)
     {
-
+        unchecked_copy(first, n, result, iterator_category(first));
     }
 
 }

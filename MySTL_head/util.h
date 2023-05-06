@@ -17,6 +17,9 @@
 
 namespace mystl
 {
+    /// ================================================================================================================
+    /// @brief move
+    /// ================================================================================================================
 
     /**
      * @brief 模板函数move，实现移动语义（也就是强制arg转化为右值引用）
@@ -24,12 +27,15 @@ namespace mystl
      * @return std::remove_reference<T>::type&& 返回右值引用类型
      * @note 本质上是一个类型转换
      * */
-
     template<typename T>
     typename std::remove_reference<T>::type &&move(T &&arg) noexcept
     {
         return static_cast<typename std::remove_reference<T>::type &&>(arg);
     }
+
+    /// ================================================================================================================
+    /// @brief forward
+    /// ================================================================================================================
 
     /**
      * @brief 模板函数forward，实现完美转发
@@ -49,10 +55,11 @@ namespace mystl
         return static_cast<T &&>(arg);
     }
 
-    /**
-     * @brief 模板函数swap，交换两个值
-     *
-     * */
+    /// ================================================================================================================
+    /// @brief swap
+    /// ================================================================================================================
+
+    /// @brief 模板函数swap，交换两个值
     template<typename T>
     void swap(T &lhs, T &rhs)
     {
@@ -60,6 +67,27 @@ namespace mystl
         lhs = mystl::move(rhs);
         rhs = mystl::move(tmp);
     }
+
+    /// ================================================================================================================
+    /// @brief pair
+    /// ================================================================================================================
+
+    template<typename T1, typename T2>
+    struct pair
+    {
+        typedef T1 first_type;
+        typedef T2 second_type;
+        first_type first;
+        second_type second;
+
+        /// @brief 默认构造函数
+        /// @note std::is_default_constructible 判断是否默认可构造
+        template<typename Other1 = T1, typename Other2 = T2, typename = typename std::enable_if<
+                std::is_default_constructible<Other1>::value &&
+                std::is_default_constructible<Other2>::value, void>::type>
+        constexpr pair() : first(), second() {}
+    };
+
 }
 
 #endif //MYSTL_UTIL_H
