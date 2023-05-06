@@ -89,11 +89,21 @@ namespace mystl
         /// @brief 构造函数
         /// ------------------------------------------------------------------------------------------------------------
 
+        /**
+         * @brief pair中定义了默认构造函数，有参构造，拷贝构造，移动构造，且分别有允许显式和隐式调用的版本
+         * */
+
         /// @brief 默认构造函数
         template<typename Other1 = T1, typename Other2 = T2, typename = typename std::enable_if<
                 std::is_default_constructible<Other1>::value &&
                 std::is_default_constructible<Other2>::value, void>::type>
         constexpr pair() : first(), second() {}
+
+        /// @brief 拷贝构造函数
+        pair(const pair &lhs) = default;
+
+        /// @brief 移动构造函数
+        pair(pair &&rhs) noexcept = default;
 
         /// @brief 隐式 有参构造函数
         template<typename U1 = T1, typename U2 = T2, typename std::enable_if<
@@ -103,14 +113,6 @@ namespace mystl
                 std::is_convertible<const U2 &, T2>::value, int>::type = 0>
         constexpr pair(const T1 &a, const T2 &b) : first(a), second(b) {}
 
-        /// @brief 隐式 转发构造函数
-        template<typename Other1, typename Other2, typename std::enable_if<
-                std::is_constructible<T1, Other1>::value &&
-                std::is_constructible<T2, Other2>::value &&
-                std::is_convertible<Other1 &&, T1>::value &&
-                std::is_convertible<Other2 &&, T2>::value, int>::type = 0>
-        constexpr pair(Other1 &&a, Other2 &&b) : first(mystl::forward<Other1>(a)), second(mystl::forward<Other2>(b)) {}
-
         /// @brief 显式 有参构造函数
         template<typename U1 = T1, typename U2 = T2, typename std::enable_if<
                 std::is_copy_constructible<U1>::value &&
@@ -118,7 +120,15 @@ namespace mystl
                 (!std::is_convertible<U1, T1>::value || !std::is_convertible<U2, T2>::value), int>::type = 0>
         explicit constexpr pair(const T1 &a, const T2 &b) : first(a), second(b) {}
 
-        /// @brief 显式 转发构造函数
+        /// @brief 隐式 移动构造函数
+        template<typename Other1, typename Other2, typename std::enable_if<
+                std::is_constructible<T1, Other1>::value &&
+                std::is_constructible<T2, Other2>::value &&
+                std::is_convertible<Other1 &&, T1>::value &&
+                std::is_convertible<Other2 &&, T2>::value, int>::type = 0>
+        constexpr pair(Other1 &&a, Other2 &&b) : first(mystl::forward<Other1>(a)), second(mystl::forward<Other2>(b)) {}
+
+        /// @brief 显式 移动构造函数
         template<typename Other1, typename Other2, typename std::enable_if<
                 std::is_constructible<T1, Other1>::value &&
                 std::is_constructible<T2, Other2>::value &&
@@ -126,11 +136,90 @@ namespace mystl
         explicit constexpr
         pair(Other1 &&a, Other2 &&b) : first(mystl::forward<Other1>(a)), second(mystl::forward<Other2>(b)) {}
 
-        /// @brief 拷贝构造函数
-        pair(const pair &lhs) = default;
+        /// @brief 隐式 拷贝构造函数
+        template<typename Other1, typename Other2, typename std::enable_if<
+                std::is_constructible<T1, const Other1 &>::value &&
+                std::is_constructible<T2, const Other2 &>::value &&
+                std::is_convertible<const Other1 &, T1>::value &&
+                std::is_convertible<const Other2 &, T2>::value, int>::type = 0>
+        constexpr pair(const pair<Other1, Other2> &other) : first(other.first), second(other.second) {}
 
-        /// @brief 移动构造函数
-        pair(pair &&rhs) noexcept = default;
+        /// @brief 显式 拷贝构造函数
+        template<typename Other1, typename Other2, typename std::enable_if<
+                std::is_constructible<T1, const Other1 &>::value &&
+                std::is_constructible<T2, const Other2 &>::value &&
+                (!std::is_convertible<const Other1 &, T1>::value ||
+                 !std::is_convertible<const Other2 &, T2>::value), int>::type = 0>
+        explicit constexpr
+        pair(const pair<Other1, Other2> &other) : first(other.first), second(other.second) {}
+
+        /// @brief 隐式 移动构造函数
+        template<typename Other1, typename Other2, typename std::enable_if<
+                std::is_constructible<T1, Other1>::value &&
+                std::is_constructible<T2, Other2>::value &&
+                std::is_convertible<Other1, T1>::value &&
+                std::is_convertible<Other2, T2>::value, int>::type = 0>
+        constexpr pair(pair<Other1, Other2> &&other) : first(mystl::forward<Other1>(other.first)),
+                                                       second(mystl::forward<Other2>(other.second)) {}
+
+        /// @brief 显式 移动构造函数
+        template<typename Other1, typename Other2, typename std::enable_if<
+                std::is_constructible<T1, Other1>::value &&
+                std::is_constructible<T2, Other2>::value &&
+                (!std::is_convertible<Other1, T1>::value ||
+                 !std::is_convertible<Other2, T2>::value), int>::type = 0>
+        explicit constexpr
+        pair(pair<Other1, Other2> &&other) : first(mystl::forward<Other1>(other.first)),
+                                             second(mystl::forward<Other2>(other.second)) {}
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 赋值运算符重载
+        /// ------------------------------------------------------------------------------------------------------------
+
+        /// @brief 拷贝赋值运算
+        pair &operator=(const pair &lhs)
+        {
+            if (this != &lhs)
+            {
+                first = lhs.first;
+                second = lhs.second;
+            }
+            return *this;
+        }
+
+        /// @brief 移动赋值运算
+        pair &operator=(pair &&rhs)
+        {
+            if (this != &rhs)
+            {
+                first = mystl::move(rhs.first);
+                second = mystl::move(rhs.second);
+            }
+            return *this;
+        }
+
+        template <typename Other1, typename Other2>
+        pair& operator=(const pair<Other1, Other2>& other)
+        {
+            first = other.first;
+            second = other.second;
+            return *this;
+        }
+
+        template<typename Other1, typename Other2>
+        pair &operator=(pair<Other1, Other2> && other)
+        {
+            first = mystl::forward<Other1>(other.first);
+            second = mystl::forward<Other2>(other.second);
+            return *this;
+        }
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 析构函数
+        /// ------------------------------------------------------------------------------------------------------------
+
+        ~pair() = default;
+
     };
 
 }
