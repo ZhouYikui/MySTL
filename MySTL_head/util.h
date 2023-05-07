@@ -13,7 +13,8 @@
 #ifndef MYSTL_UTIL_H
 #define MYSTL_UTIL_H
 
-#include <type_traits>
+#include "type_traits.h"
+#include <cstddef>
 
 namespace mystl
 {
@@ -59,13 +60,29 @@ namespace mystl
     /// @brief swap
     /// ================================================================================================================
 
-    /// @brief 模板函数swap，交换两个值
+    /// @brief 模板函数swap，交换两个值，使用move避免不必要的复制
     template<typename T>
     void swap(T &lhs, T &rhs)
     {
         auto tmp(mystl::move(lhs));
         lhs = mystl::move(rhs);
         rhs = mystl::move(tmp);
+    }
+
+    template<typename ForwardIter1, typename ForwardIter2>
+    ForwardIter2 swap_range(ForwardIter1 first1, ForwardIter1 last1, ForwardIter2 first2)
+    {
+        for (; first1 != last1; ++first1, (void) ++first2)
+        {
+            mystl::swap(*first1, *first2);
+        }
+        return first2;
+    }
+
+    template<typename Tp, size_t N>
+    void swap(Tp(&a)[N], Tp(&b)[N])
+    {
+        mystl::swap_range(a, a + N, b);
     }
 
     /// ================================================================================================================
@@ -198,8 +215,8 @@ namespace mystl
             return *this;
         }
 
-        template <typename Other1, typename Other2>
-        pair& operator=(const pair<Other1, Other2>& other)
+        template<typename Other1, typename Other2>
+        pair &operator=(const pair<Other1, Other2> &other)
         {
             first = other.first;
             second = other.second;
@@ -207,7 +224,7 @@ namespace mystl
         }
 
         template<typename Other1, typename Other2>
-        pair &operator=(pair<Other1, Other2> && other)
+        pair &operator=(pair<Other1, Other2> &&other)
         {
             first = mystl::forward<Other1>(other.first);
             second = mystl::forward<Other2>(other.second);
@@ -220,7 +237,60 @@ namespace mystl
 
         ~pair() = default;
 
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief swap
+        /// ------------------------------------------------------------------------------------------------------------
+
+        void swap(pair &other)
+        {
+            if (this != &other)
+            {
+                mystl::swap(first, other.first);
+                mystl::swap(second, other.second);
+            }
+        }
+
     };
+
+    /// ================================================================================================================
+    /// @brief 比较运算符重载
+    /// ================================================================================================================
+
+    template<typename T1, typename T2>
+    bool operator==(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return lhs.first == rhs.first && lhs.second == rhs.second;
+    }
+
+    template<typename T1, typename T2>
+    bool operator!=(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+    template<typename T1, typename T2>
+    bool operator<(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
+    }
+
+    template<typename T1, typename T2>
+    bool operator>(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return lhs.first > rhs.first || (lhs.first == rhs.first && lhs.second > rhs.second);
+    }
+
+    template<typename T1, typename T2>
+    bool operator<=(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return !(lhs > rhs);
+    }
+
+    template<typename T1, typename T2>
+    bool operator>=(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return !(lhs < rhs);
+    }
 
 }
 
