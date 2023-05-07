@@ -2,6 +2,14 @@
 // Created by HP on 2023/4/22.
 //
 
+/**
+ * @file uninitialized.h
+ * @brief 对未初始化空间构造元素
+ *
+ * @date 2023年4月22日
+ * @author ZYK
+ */
+
 #ifndef MYSTL_UNINITIALIZED_H
 #define MYSTL_UNINITIALIZED_H
 
@@ -128,6 +136,11 @@ namespace mystl
         }
         return cur;
     }
+
+    /**
+     * @brief uninitialized_copy_n
+     * @brief 把 [first, first + n) 上的内容复制到以 result 为起始处的空间，返回复制结束的位置
+     * */
 
     template<typename InputIter, typename Size, typename ForwardIter>
     ForwardIter uninitialized_copy_n(InputIter first, Size n, ForwardIter result)
