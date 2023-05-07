@@ -62,6 +62,19 @@ namespace mystl
     }
 
     /// ================================================================================================================
+    /// @brief fill series
+    /// ================================================================================================================
+
+    template <typename ForwardIter, typename T>
+    void fill_cat
+
+    template<typename ForwardIter, typename T>
+    void fill(ForwardIter first, ForwardIter last, const T &value)
+    {
+
+    }
+
+    /// ================================================================================================================
     /// @brief fill_n series
     /// ================================================================================================================
 
@@ -182,7 +195,7 @@ namespace mystl
     template<typename InputIter, typename Size, typename OutputIter>
     mystl::pair<InputIter, OutputIter> copy_n(InputIter first, Size n, OutputIter result)
     {
-        unchecked_copy(first, n, result, iterator_category(first));
+        unchecked_copy_n(first, n, result, iterator_category(first));
     }
 
 }

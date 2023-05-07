@@ -21,6 +21,42 @@
 
 namespace mystl
 {
+    /// ================================================================================================================
+    /// @brief uninitialized_fill
+    /// ================================================================================================================
+
+    template<typename ForwardIter, typename T>
+    void unchecked_uninit_fill(ForwardIter first, ForwardIter last, const T &value, std::true_type)
+    {
+
+    }
+
+    template<typename ForwardIter, typename T>
+    void unchecked_uninit_fill(ForwardIter first, ForwardIter last, const T &value, std::false_type)
+    {
+        auto cur = first;
+        try
+        {
+            for (; cur != last; ++cur)
+            {
+                mystl::construct(&*cur, value);
+            }
+        }
+        catch (...)
+        {
+            for (; first != cur; ++first)
+            {
+                mystl::destroy(&*first);
+            }
+        }
+    }
+
+    template<typename ForwardIter, typename T>
+    void uninitialized_fill(ForwardIter first, ForwardIter last, const T &value)
+    {
+        unchecked_uninit_fill(first, last, value,
+                              std::is_trivially_copy_assignable<typename iterator_traits<ForwardIter>::value_type>{});
+    }
 
     /// ================================================================================================================
     /// @brief uninitialized_fill_n
@@ -49,7 +85,9 @@ namespace mystl
         catch (...)
         {
             for (; first != cur; ++first)
+            {
                 mystl::destroy(&*first);
+            }
         }
         return cur;
     }
@@ -130,7 +168,9 @@ namespace mystl
         catch (...)
         {
             for (; result != cur; --cur)
+            {
                 mystl::destroy(&*cur);
+            }
         }
         return cur;
     }
