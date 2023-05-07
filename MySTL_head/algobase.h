@@ -62,12 +62,47 @@ namespace mystl
     }
 
     /// ================================================================================================================
+    /// @brief fill_n series
+    /// ================================================================================================================
+
+    template<typename OutputIter, typename Size, typename T>
+    OutputIter unchecked_fill_n(OutputIter first, Size n, const T &value)
+    {
+        for (; n > 0; --n, ++first)
+        {
+            *first = value;
+        }
+        return first;
+    }
+
+    /// @brief 当 T 和 U 都是整数类型且大小为1字节，且T不是bool类型时，调用特化版本（直接设置内存）
+    /// @brief void *memset(void *s, int c, size_t n);
+
+    template<typename T, typename Size, typename U>
+    typename std::enable_if<std::is_integral<T>::value && sizeof(T) == 1 &&
+                            std::is_integral<U>::value && sizeof(U) == 1 &&
+                            !std::is_same<T, bool>::value, T *>::type
+    unchecked_fill_n(T *first, Size n, U value)
+    {
+        if (n > 0)
+        {
+            /// 转化成unsigned char 防止符号溢出
+            std::memset(first, (unsigned char) value, (size_t) (n));
+        }
+        return first + n;
+    }
+
+    template<typename OutputIter, typename Size, typename T>
+    OutputIter fill_n(OutputIter first, Size n, const T &value)
+    {
+        return unchecked_fill_n(first, n, value);
+    }
+
+    /// ================================================================================================================
     /// @brief copy series
     /// ================================================================================================================
 
-    /**
-     * @brief copy辅助函数，根据不同的迭代器类型选择不同的处理方式
-     * */
+    /// @brief copy辅助函数，根据不同的迭代器类型选择不同的处理方式
 
     template<typename InputIter, typename OutputIter>
     OutputIter unchecked_copy_cat(InputIter first, InputIter last, OutputIter result, mystl::input_iterator_tag)
@@ -90,10 +125,8 @@ namespace mystl
         return result;
     }
 
-    /**
-     * @brief unchecked_copy 不同情况下调用不同重载
-     * @note void* memmove ( void* dest, const void* src, std::size_t count );
-     * */
+    /// @brief unchecked_copy 不同情况下调用不同重载
+    /// @note void* memmove ( void* dest, const void* src, std::size_t count );
 
     template<typename InputIter, typename OutputIter>
     OutputIter unchecked_copy(InputIter first, InputIter last, OutputIter result)
@@ -122,12 +155,10 @@ namespace mystl
     /// @brief copy_n series
     /// ================================================================================================================
 
-    /**
-     * @brief unchecked_copy_n 调用不同重载
-     * @param input_iterator_tag 逐个复制
-     * @param random_access_iterator_tag 一次性复制
-     * @return 返回一个pair 指向复制的尾部
-     * */
+    /// @brief unchecked_copy_n 调用不同重载
+    /// @param input_iterator_tag 逐个复制
+    /// @param random_access_iterator_tag 一次性复制
+    /// @return 返回一个pair 指向复制的尾部
 
     template<typename InputIter, typename Size, typename OutputIter>
     mystl::pair<InputIter, OutputIter>

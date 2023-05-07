@@ -21,39 +21,37 @@
 
 namespace mystl
 {
-    /**
-     * @brief T 和 U 都是整数类型且大小为1字节，且T不是bool类型
-     * @brief enable_if 在编译时确定函数模板是否有效
-     * @brief memset
-     * */
-    template<typename T, typename Size, typename U>
-    typename std::enable_if<std::is_integral<T>::value && sizeof(T) == 1 && !std::is_same<T, bool>::value &&
-                            std::is_integral<U>::value && sizeof(U) == 1, T *>::type
-    unchecked_fill_n(T *first, Size n, U value)
-    {
-        if (n > 0)
-        {
-            /// 转化成unsigned char 防止符号溢出
-            std::memset(first, (unsigned char) value, (size_t) (n));
-        }
-        return first + n;
-    }
 
-    template<typename OutputIter, typename Size, typename T>
-    OutputIter fill_n(OutputIter first, Size n, const T &value)
-    {
-        return unchecked_fill_n(first, n, value);
-    }
+    /// ================================================================================================================
+    /// @brief uninitialized_fill_n
+    /// ================================================================================================================
 
-    /**
-     * @brief 根据是否符合平凡copy选择不同的函数
-     * @param[in] std::true_type 平凡时
-     * */
+    /// @brief 根据是否符合平凡copy选择不同的函数
+    /// @param[in] std::true_type 平凡copy赋值时（不需要构造函数）
 
     template<typename ForwardIter, typename Size, typename T>
     ForwardIter unchecked_uninit_fill_n(ForwardIter first, Size n, const T &value, std::true_type)
     {
         return mystl::fill_n(first, n, value);
+    }
+
+    template<typename ForwardIter, typename Size, typename T>
+    ForwardIter unchecked_uninit_fill_n(ForwardIter first, Size n, const T &value, std::false_type)
+    {
+        auto cur = first;
+        try
+        {
+            for (; n > 0; --n, ++cur)
+            {
+                mystl::construct(&*cur, value);
+            }
+        }
+        catch (...)
+        {
+            for (; first != cur; ++first)
+                mystl::destroy(&*first);
+        }
+        return cur;
     }
 
     template<typename ForwardIter, typename Size, typename T>
