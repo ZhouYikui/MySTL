@@ -107,6 +107,8 @@ namespace mystl
 
         vector &operator=(vector<T> &&rhs) noexcept;
 
+        vector &operator=(std::initializer_list<value_type> ilist);
+
     public:
         /// ------------------------------------------------------------------------------------------------------------
         /// @brief 迭代器相关操作
@@ -257,13 +259,11 @@ namespace mystl
         data_allocator::deallocate(first, n);
     }
 
-/// ================================================================================================================
-/**
- * @brief 重载赋值操作符
- * */
-/// ================================================================================================================
+    /// ================================================================================================================
+    /// @brief 重载赋值运算符
+    /// ================================================================================================================
 
-///@brief 拷贝赋值运算符
+    ///@brief 拷贝赋值运算符
     template<typename T>
     vector<T> &vector<T>::operator=(const vector<T> &lhs)
     {
@@ -293,7 +293,7 @@ namespace mystl
         return *this;
     }
 
-///@brief 移动复制运算符
+    ///@brief 移动复制运算符
     template<typename T>
     vector<T> &vector<T>::operator=(vector &&rhs) noexcept
     {
@@ -304,6 +304,14 @@ namespace mystl
         rhs.begin_ = nullptr;
         rhs.end_ = nullptr;
         rhs.cap_ = nullptr;
+        return *this;
+    }
+
+    template<typename T>
+    vector<T> &vector<T>::operator=(std::initializer_list<value_type> ilist)
+    {
+        vector tmp(ilist.begin(), ilist.end());
+        swap(tmp);
         return *this;
     }
 
