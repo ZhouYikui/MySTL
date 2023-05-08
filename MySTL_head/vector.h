@@ -184,9 +184,21 @@ namespace mystl
         /// ------------------------------------------------------------------------------------------------------------
         /// @brief 容量相关操作
         /// ------------------------------------------------------------------------------------------------------------
+
+        bool empty() const noexcept
+        {
+            return begin_ == end_;
+        }
+
         size_type size() const noexcept
         {
             return static_cast<size_type>(end_ - begin_);
+        }
+
+        /// @brief  max_size函数，用于获取vector可容纳元素的最大数量
+        size_type max_size() const noexcept
+        {
+            return static_cast<size_type>(-1) / sizeof(T);
         }
 
         size_type capacity() const noexcept

@@ -18,18 +18,18 @@
 
 namespace mystl
 {
-    /**
-     * @brief 表示迭代器标签的结构体
-     * */
+    /// ================================================================================================================
+    /// @brief 五种迭代器类型标记
+    /// ================================================================================================================
     struct input_iterator_tag {};
     struct output_iterator_tag {};
     struct forward_iterator_tag : public input_iterator_tag {};
     struct bidirectional_iterator_tag : public forward_iterator_tag {};
     struct random_access_iterator_tag : public bidirectional_iterator_tag {};
 
-    /**
-     * @brief 迭代器模板，定义了迭代器的基本要素
-     * */
+    /// ================================================================================================================
+    /// @brief 迭代器模板
+    /// ================================================================================================================
 
     template<typename Category, typename T, typename Distance = ptrdiff_t, typename Pointer = T *, typename Reference = T &>
     struct iterator
@@ -41,12 +41,14 @@ namespace mystl
         typedef Distance difference_type;
     };
 
-    /**
-     * @brief 检测模板类型T是否具有iterator_category
-     * @brief 如果类型T有iterator_category类型成员，sizeof(test<T>(0)) == sizeof(char)为true
-     * @brief static char test(typename U::iterator_category * = 0)为特化版本
-     * @brief 通过函数重载和模板特化实现条件分支
-     * */
+    /// ================================================================================================================
+    /// @brief 迭代器traits
+    /// ================================================================================================================
+
+    /// @brief 检测模板类型T是否具有iterator_category
+    /// @brief 如果类型T有iterator_category类型成员，sizeof(test<T>(0)) == sizeof(char)为true
+    /// @brief static char test(typename U::iterator_category * = 0)为特化版本
+    /// @brief 通过函数重载和模板特化实现条件分支
 
     template<typename T>
     struct has_iterator_cat
@@ -141,10 +143,12 @@ namespace mystl
         typedef ptrdiff_t difference_type;
     };
 
-    /**
-     * @brief 目的：判断迭代器T的iterator_category能否隐式转换为U
-     * @brief if false -> m_false_type
-     * */
+    /// ================================================================================================================
+    /// @brief 迭代器traits -> is_iterator && what iterator
+    /// ================================================================================================================
+
+    /// @brief 目的：判断迭代器T的iterator_category能否隐式转换为U
+    /// @brief if false -> m_false_type
 
     template<typename T, typename U, bool = has_iterator_cat<iterator_traits<T>>::value>
     struct has_iterator_cat_of
@@ -152,9 +156,7 @@ namespace mystl
     {
     };
 
-    /**
-     * @brief 用于判断某个迭代器类型是否属于某种迭代器
-     * */
+    /// @brief 用于判断某个迭代器类型是否属于某种迭代器
 
     template<typename T, typename U>
     struct has_iterator_cat_of<T, U, false> : public m_false_type {};
