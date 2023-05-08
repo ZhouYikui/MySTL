@@ -182,12 +182,9 @@ namespace mystl
     {
     };
 
-    /**
-     * @brief 函数模板，根据迭代器返回相应的category
-     * @param[in] constIterator& 迭代器的引用
-     * @return Category() 对象
-     * @return difference_type*
-     * */
+    /// ================================================================================================================
+    /// @brief 迭代器traits -> 萃取category distance_type value_type
+    /// ================================================================================================================
 
     template<typename Iterator>
     typename iterator_traits<Iterator>::iterator_category iterator_category(const Iterator &)
