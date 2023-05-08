@@ -66,12 +66,24 @@ namespace mystl
     /// ================================================================================================================
 
     template <typename ForwardIter, typename T>
-    void fill_cat
+    void fill_cat(ForwardIter first, ForwardIter last, const T& value, mystl::forward_iterator_tag)
+    {
+        for (; first != last; ++first)
+        {
+            *first = value;
+        }
+    }
+
+    template <typename ForwardIter, typename T>
+    void fill_cat(ForwardIter first, ForwardIter last, const T& value, mystl::random_access_iterator_tag)
+    {
+        fill_n(first, last - first, value);
+    }
 
     template<typename ForwardIter, typename T>
     void fill(ForwardIter first, ForwardIter last, const T &value)
     {
-
+        fill_cat(first, last, value, iterator_category(first));
     }
 
     /// ================================================================================================================
