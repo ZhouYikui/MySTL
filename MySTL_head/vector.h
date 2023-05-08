@@ -109,6 +109,14 @@ namespace mystl
 
         vector &operator=(std::initializer_list<value_type> ilist);
 
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 析构函数
+        /// ------------------------------------------------------------------------------------------------------------
+        ~vector()
+        {
+            destroy_and_recover(begin_, end_, cap_ - begin_);
+        }
+
     public:
         /// ------------------------------------------------------------------------------------------------------------
         /// @brief 迭代器相关操作
@@ -118,7 +126,7 @@ namespace mystl
             return begin_;
         }
 
-        iterator begin() const noexcept
+        const_iterator begin() const noexcept
         {
             return begin_;
         }
@@ -128,9 +136,49 @@ namespace mystl
             return end_;
         }
 
-        iterator end() const noexcept
+        const_iterator end() const noexcept
         {
             return end_;
+        }
+
+        reverse_iterator rbegin() noexcept
+        {
+            return reverse_iterator(begin());
+        }
+
+        const_reverse_iterator rbegin() const noexcept
+        {
+            return const_reverse_iterator(begin());
+        }
+
+        reverse_iterator rend() noexcept
+        {
+            return reverse_iterator(end());
+        }
+
+        const_reverse_iterator rend() const noexcept
+        {
+            return const_reverse_iterator(end());
+        }
+
+        const_iterator cbegin() const noexcept
+        {
+            return begin();
+        }
+
+        const_iterator cend() const noexcept
+        {
+            return end();
+        }
+
+        const_reverse_iterator crbegin() const noexcept
+        {
+            return rbegin();
+        }
+
+        const_reverse_iterator crend() const noexcept
+        {
+            return rend();
         }
 
         /// ------------------------------------------------------------------------------------------------------------
