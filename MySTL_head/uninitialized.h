@@ -215,6 +215,11 @@ namespace mystl
         return cur;
     }
 
+    /**
+     * @brief uninitialized_move
+     * @brief 把 [first, last) 上的内容移动到以 result 为起始处的空间，返回复制结束的位置
+     * */
+
     template<typename InputIter, typename ForwardIter>
     ForwardIter uninitialized_move(InputIter first, InputIter last, ForwardIter result)
     {
