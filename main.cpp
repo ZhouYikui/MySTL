@@ -8,7 +8,7 @@ using namespace std;
 
 int main()
 {
-    mystl::vector<int> v1;
-    mystl::uninitialized_move(v1.begin(), v1.end(), v1.begin());
+    vector<int> v1;
+    v1.data();
     return 0;
 }

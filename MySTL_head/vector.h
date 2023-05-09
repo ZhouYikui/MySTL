@@ -206,7 +206,71 @@ namespace mystl
             return static_cast<size_type>(cap_ - begin_);
         }
 
-        void reverse(size_type n);
+        void reserve(size_type n);
+
+        void shrink_to_fit();
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 访问元素相关函数
+        /// ------------------------------------------------------------------------------------------------------------
+
+        reference operator[](size_type n)
+        {
+            MYSTL_DEBUG(n < size());
+            return *(begin_ + n);
+        }
+
+        const_reference operator[](size_type n) const
+        {
+            MYSTL_DEBUG(n < size());
+            return *(begin_ + n);
+        }
+
+        reference at(size_type n)
+        {
+            THROW_OUT_OF_RANGE_IF(!(n < size()), "vector<T>::at() subscript out of range");
+            return (*this)[n];
+        }
+
+        const_reference  at(size_type n) const
+        {
+            THROW_OUT_OF_RANGE_IF(!(n < size()), "vector<T>::at() subscript out of range");
+            return (*this)[n];
+        }
+
+        reference front()
+        {
+            MYSTL_DEBUG(!empty());
+            return *begin_;
+        }
+
+        const_reference front() const
+        {
+            MYSTL_DEBUG(!empty());
+            return *begin_;
+        }
+
+        reference back()
+        {
+            MYSTL_DEBUG(!empty());
+            return *(end_ - 1);
+        }
+
+        const_reference back() const
+        {
+            MYSTL_DEBUG(!empty());
+            return *(end_ - 1);
+        }
+
+        pointer data() noexcept
+        {
+            return begin_;
+        }
+
+        const_pointer data() const noexcept
+        {
+            return begin_;
+        }
 
         /// ------------------------------------------------------------------------------------------------------------
         /// @brief 容器相关函数
@@ -216,8 +280,13 @@ namespace mystl
 
     private:
         /// ------------------------------------------------------------------------------------------------------------
-        /// @brief 初始化/回收辅助函数
+        /// @brief helper function
         /// ------------------------------------------------------------------------------------------------------------
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief 初始化/回收函数
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
         void try_init();
 
         void init_space(size_type size, size_type cap);
@@ -228,6 +297,13 @@ namespace mystl
         void range_init(Iter first, Iter last);
 
         void destroy_and_recover(iterator first, iterator last, size_type n);
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief shrink_to_fit函数
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void reinsert(size_type size);
+
     };
 
     /// ================================================================================================================
@@ -235,7 +311,7 @@ namespace mystl
     /// ================================================================================================================
 
     template<typename T>
-    void vector<T>::reverse(size_type n)
+    void vector<T>::reserve(size_type n)
     {
         if (capacity() < n)
         {
@@ -244,6 +320,21 @@ namespace mystl
             const auto old_size = size();
             auto tmp = data_allocator::allocate(n);
             mystl::uninitialized_move(begin_, end_, tmp);
+            data_allocator::deallocate(begin_, cap_ - begin_);
+            begin_ = tmp;
+            end_ = begin_ + old_size;
+            cap_ = begin_ + n;
+        }
+    }
+
+    /// @brief 放弃多余的容量
+
+    template<typename T>
+    void vector<T>::shrink_to_fit()
+    {
+        if (end_ < cap_)
+        {
+            reinsert(size());
         }
     }
 
@@ -336,6 +427,29 @@ namespace mystl
     {
         data_allocator::destroy(first, last);
         data_allocator::deallocate(first, n);
+    }
+
+    /// ================================================================================================================
+    /// @brief shrink_to_fit辅助函数定义
+    /// ================================================================================================================
+
+    template<typename T>
+    void vector<T>::reinsert(size_type size)
+    {
+        auto new_begin = data_allocator::allocate(size);
+        try
+        {
+            mystl::uninitialized_move(begin_, end_, new_begin);
+        }
+        catch (...)
+        {
+            data_allocator::deallocate(new_begin, size);
+            throw;
+        }
+        data_allocator::deallocate(begin_, cap_ - begin_);
+        begin_ = new_begin;
+        end_ = begin_ + size;
+        cap_ = begin_ + size;
     }
 
     /// ================================================================================================================
