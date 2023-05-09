@@ -65,8 +65,8 @@ namespace mystl
     /// @brief fill series
     /// ================================================================================================================
 
-    template <typename ForwardIter, typename T>
-    void fill_cat(ForwardIter first, ForwardIter last, const T& value, mystl::forward_iterator_tag)
+    template<typename ForwardIter, typename T>
+    void fill_cat(ForwardIter first, ForwardIter last, const T &value, mystl::forward_iterator_tag)
     {
         for (; first != last; ++first)
         {
@@ -74,8 +74,8 @@ namespace mystl
         }
     }
 
-    template <typename ForwardIter, typename T>
-    void fill_cat(ForwardIter first, ForwardIter last, const T& value, mystl::random_access_iterator_tag)
+    template<typename ForwardIter, typename T>
+    void fill_cat(ForwardIter first, ForwardIter last, const T &value, mystl::random_access_iterator_tag)
     {
         fill_n(first, last - first, value);
     }
@@ -208,6 +208,53 @@ namespace mystl
     mystl::pair<InputIter, OutputIter> copy_n(InputIter first, Size n, OutputIter result)
     {
         unchecked_copy_n(first, n, result, iterator_category(first));
+    }
+
+    /// ================================================================================================================
+    /// @brief move series
+    /// ================================================================================================================
+
+    template<typename InputIter, typename OutputIter>
+    OutputIter unchecked_move_cat(InputIter first, InputIter last, OutputIter result, mystl::input_iterator_tag)
+    {
+        for (; first != last; ++first, ++result)
+        {
+            *result = mystl::move(*first);
+        }
+        return result;
+    }
+
+    template<typename RandomIter, typename OutputIter>
+    OutputIter
+    unchecked_move_cat(RandomIter first, RandomIter last, OutputIter result, mystl::random_access_iterator_tag)
+    {
+        for (auto n = last - first; n > 0; --n, ++first, ++result)
+        {
+            *result = mystl::move(*first);
+        }
+        return result;
+    }
+
+    template<typename InputIter, typename OutputIter>
+    OutputIter unchecked_move(InputIter first, InputIter last, OutputIter result)
+    {
+        return unchecked_move_cat(first, last, result, iterator_category(first));
+    }
+
+    template<typename Tp, typename Up>
+    typename std::enable_if<std::is_same<typename std::remove_const<Tp>::type, Up>::value &&
+                            std::is_trivially_move_assignable<Up>::value, Up *>::type
+    unchecked_move(Tp *first, Tp *last, Up *result)
+    {
+        const auto n = static_cast<size_t>(last - first);
+        if (n != 0) std::memmove(result, first, n * sizeof(Up));
+        return result + n;
+    }
+
+    template<typename InputIter, typename OutputIter>
+    OutputIter move(InputIter first, InputIter last, OutputIter result)
+    {
+        return unchecked_move(first, last, result);
     }
 
 }

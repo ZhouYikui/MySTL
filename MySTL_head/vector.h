@@ -143,22 +143,22 @@ namespace mystl
 
         reverse_iterator rbegin() noexcept
         {
-            return reverse_iterator(begin());
+            return reverse_iterator(end());
         }
 
         const_reverse_iterator rbegin() const noexcept
         {
-            return const_reverse_iterator(begin());
+            return const_reverse_iterator(end());
         }
 
         reverse_iterator rend() noexcept
         {
-            return reverse_iterator(end());
+            return reverse_iterator(begin());
         }
 
         const_reverse_iterator rend() const noexcept
         {
-            return const_reverse_iterator(end());
+            return const_reverse_iterator(begin());
         }
 
         const_iterator cbegin() const noexcept
@@ -182,7 +182,7 @@ namespace mystl
         }
 
         /// ------------------------------------------------------------------------------------------------------------
-        /// @brief 容量相关操作
+        /// @brief 容量相关函数
         /// ------------------------------------------------------------------------------------------------------------
 
         bool empty() const noexcept
@@ -206,8 +206,10 @@ namespace mystl
             return static_cast<size_type>(cap_ - begin_);
         }
 
+        void reverse(size_type n);
+
         /// ------------------------------------------------------------------------------------------------------------
-        /// @brief 容器相关操作
+        /// @brief 容器相关函数
         /// ------------------------------------------------------------------------------------------------------------
 
         void swap(vector<T> &lhs) noexcept;
@@ -229,7 +231,24 @@ namespace mystl
     };
 
     /// ================================================================================================================
-    /// @brief 容器修改相关函数定义
+    /// @brief 容量相关函数定义
+    /// ================================================================================================================
+
+    template<typename T>
+    void vector<T>::reverse(size_type n)
+    {
+        if (capacity() < n)
+        {
+            // size n 不能超过max_size()
+            THROW_LENGTH_ERROR_IF(n > max_size(), "n can not larger than max_size() in vector<T>::reserve(n)");
+            const auto old_size = size();
+            auto tmp = data_allocator::allocate(n);
+            mystl::uninitialized_move(begin_, end_, tmp);
+        }
+    }
+
+    /// ================================================================================================================
+    /// @brief 容器相关函数定义
     /// ================================================================================================================
 
     template<typename T>
@@ -244,7 +263,7 @@ namespace mystl
     }
 
     /// ================================================================================================================
-    /// @brief helper function
+    /// @brief 初始化/回收辅助函数定义
     /// ================================================================================================================
 
     /**
