@@ -308,6 +308,59 @@ namespace mystl
         return unchecked_move(first, last, result);
     }
 
+    /// ================================================================================================================
+    /// @brief move_backward series
+    /// ================================================================================================================
+
+    /// @brief bidirectional_iterator_tag 版本
+    template<typename BidirectionalIter1, typename BidirectionalIter2>
+    BidirectionalIter2 unchecked_move_backward_cat(BidirectionalIter1 first, BidirectionalIter1 last,
+                                                   BidirectionalIter2 result, mystl::bidirectional_iterator_tag)
+    {
+        while (first != last)
+            *--result = mystl::move(*--last);
+        return result;
+    }
+
+    /// @brief random_access_iterator_tag 版本
+    template<typename RandomIter1, typename RandomIter2>
+    RandomIter2
+    unchecked_move_backward_cat(RandomIter1 first, RandomIter1 last,
+                                RandomIter2 result, mystl::random_access_iterator_tag)
+    {
+        for (auto n = last - first; n > 0; --n)
+            *--result = mystl::move(*--last);
+        return result;
+    }
+
+    template<typename BidirectionalIter1, typename BidirectionalIter2>
+    BidirectionalIter2
+    unchecked_move_backward(BidirectionalIter1 first, BidirectionalIter1 last, BidirectionalIter2 result)
+    {
+        return unchecked_move_backward_cat(first, last, result, iterator_category(first));
+    }
+
+    template<typename Tp, typename Up>
+    typename std::enable_if<std::is_same<typename std::remove_const<Tp>::type, Up>::value &&
+                            std::is_trivially_move_assignable<Up>::value, Up *>::type
+    unchecked_move_backward(Tp *first, Tp *last, Up *result)
+    {
+        const auto n = static_cast<size_t>(last - first);
+        if (n != 0)
+        {
+            result -= n;
+            std::memmove(result, first, n * sizeof(Up));
+        }
+        return result;
+    }
+
+    template<typename BidirectionalIter1, typename BidirectionalIter2>
+    BidirectionalIter2 move_backward(BidirectionalIter1 first, BidirectionalIter1 last, BidirectionalIter2 result)
+    {
+        return unchecked_move_backward(first, last, result);
+    }
+
+
 }
 
 #endif //MYSTL_ALGOBASE_H
