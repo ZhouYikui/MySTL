@@ -462,6 +462,10 @@ namespace mystl
         data_allocator::deallocate(first, n);
     }
 
+    /// ================================================================================================================
+    /// @brief assign辅助函数
+    /// ================================================================================================================
+
     template<typename T>
     void vector<T>::fill_assign(size_type n, const value_type &value)
     {
@@ -478,6 +482,51 @@ namespace mystl
         else
         {
             erase(mystl::fill_n(begin_, n, value), end_);
+        }
+    }
+
+    template<typename T>
+    template<typename IIter>
+    void vector<T>::copy_assign(IIter first, IIter last, input_iterator_tag)
+    {
+        auto cur = begin_;
+        for (; first != last && cur != end_; ++first, ++cur)
+        {
+            *cur = *first;
+        }
+        if (first == last)
+        {
+            erase(cur, end_);
+        }
+        else
+        {
+            insert(end_, first, last);
+        }
+    }
+
+    template<typename T>
+    template<typename FIter>
+    void vector<T>::copy_assign(FIter first, FIter last, forward_iterator_tag)
+    {
+        const size_type len = mystl::distance(first, last);
+        if (len > capacity())
+        {
+            vector tmp(first, last);
+            swap(tmp);
+        }
+        else if (len > size())
+        {
+            auto mid = first;
+            mystl::advance(mid, size());
+            mystl::copy(first, mid, begin_);
+            auto new_end = mystl::uninitialized_copy(mid, last, end_);
+            end_ = new_end;
+        }
+        else
+        {
+            auto new_end = mystl::copy(first, last, begin_);
+            data_allocator::destroy(new_end, end_);
+            end_ = new_end;
         }
     }
 
