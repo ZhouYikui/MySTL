@@ -305,6 +305,24 @@ namespace mystl
         template<typename... Args>
         iterator emplace(const_iterator pos, Args &&...args);
 
+        template<typename... Args>
+        void emplace_back(Args &&...args);
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief push_back/pop_back
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void push_back(const value_type &value);
+
+        void push_back(value_type &&value)
+        {
+            emplace_back(mystl::move(value));
+        }
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief swap
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
         void swap(vector<T> &lhs) noexcept;
 
     private:
@@ -398,9 +416,7 @@ namespace mystl
     /// @brief 容器相关函数定义
     /// ================================================================================================================
 
-    /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    /// @brief emplace/emplace_back
-    /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    /// @brief emplace/emplace_back 原地构造元素
 
     template<typename T>
     template<typename ...Args>
@@ -434,6 +450,37 @@ namespace mystl
             reallocate_emplace(xpos, mystl::forward<Args>(args)...);
         }
         return begin() + n;
+    }
+
+    template<typename T>
+    template<typename... Args>
+    void vector<T>::emplace_back(Args &&...args)
+    {
+        if (end_ < cap_)
+        {
+            data_allocator::construct(mystl::address_of(*end_), mystl::forward<Args>(args)...);
+            ++end_;
+        }
+        else
+        {
+            reallocate_emplace(end_, mystl::forward<Args>(args)...);
+        }
+    }
+
+    /// @brief push_back/pop_back
+
+    template<typename T>
+    void vector<T>::push_back(const value_type &value)
+    {
+        if (end_ != cap_)
+        {
+            data_allocator::construct(mystl::address_of(*end_), value);
+            ++end_;
+        }
+        else
+        {
+            reallocate_insert(end_, value);
+        }
     }
 
     template<typename T>
@@ -624,6 +671,31 @@ namespace mystl
         {
             new_end = mystl::uninitialized_move(begin_, pos, new_begin);
             data_allocator::construct(mystl::address_of(*new_end), mystl::forward<Args>(args)...);
+            ++new_end;
+            new_end = mystl::uninitialized_move(pos, end_, new_end);
+        }
+        catch (...)
+        {
+            data_allocator::deallocate(new_begin, new_size);
+            throw;
+        }
+        destroy_and_recover(begin_, end_, cap_ - begin_);
+        begin_ = new_begin;
+        end_ = new_end;
+        cap_ = new_begin + new_size;
+    }
+
+    template <typename T>
+    void vector<T>::reallocate_insert(iterator pos, const value_type& value)
+    {
+        const auto new_size = get_new_cap(1);
+        auto new_begin = data_allocator::allocate(new_size);
+        auto new_end = new_begin;
+        const value_type& value_copy = value;
+        try
+        {
+            new_end = mystl::uninitialized_move(begin_, pos, new_begin);
+            data_allocator::construct(mystl::address_of(*new_end), value_copy);
             ++new_end;
             new_end = mystl::uninitialized_move(pos, end_, new_end);
         }
