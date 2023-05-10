@@ -232,7 +232,7 @@ namespace mystl
             return (*this)[n];
         }
 
-        const_reference  at(size_type n) const
+        const_reference at(size_type n) const
         {
             THROW_OUT_OF_RANGE_IF(!(n < size()), "vector<T>::at() subscript out of range");
             return (*this)[n];
@@ -276,6 +276,27 @@ namespace mystl
         /// @brief 容器相关函数
         /// ------------------------------------------------------------------------------------------------------------
 
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief assign
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void assign(size_type n, const value_type &value)
+        {
+            fill_assign(n, value);
+        }
+
+        template<typename Iter, typename std::enable_if<mystl::is_input_iterator<Iter>::value, int>::type = 0>
+        void assign(Iter first, Iter last)
+        {
+            MYSTL_DEBUG(!(last < first));
+            copy_assign(first, last, iterator_category(first));
+        }
+
+        void assign(std::initializer_list<value_type> ilist)
+        {
+            copy_assign(ilist.begin(), ilist.end(), mystl::forward_iterator_tag{});
+        }
+
         void swap(vector<T> &lhs) noexcept;
 
     private:
@@ -297,6 +318,18 @@ namespace mystl
         void range_init(Iter first, Iter last);
 
         void destroy_and_recover(iterator first, iterator last, size_type n);
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief assign
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void fill_assign(size_type n, const value_type &value);
+
+        template<typename IIter>
+        void copy_assign(IIter first, IIter last, input_iterator_tag);
+
+        template<typename FIter>
+        void copy_assign(FIter first, FIter last, forward_iterator_tag);
 
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief shrink_to_fit函数
@@ -427,6 +460,25 @@ namespace mystl
     {
         data_allocator::destroy(first, last);
         data_allocator::deallocate(first, n);
+    }
+
+    template<typename T>
+    void vector<T>::fill_assign(size_type n, const value_type &value)
+    {
+        if (n > capacity())
+        {
+            vector tmp(n, value);
+            swap(tmp);
+        }
+        else if (n > size())
+        {
+            mystl::fill(begin(), end(), value);
+            end_ = mystl::uninitialized_fill_n(end_, n - size(), value);
+        }
+        else
+        {
+            erase(mystl::fill_n(begin_, n, value), end_);
+        }
     }
 
     /// ================================================================================================================
