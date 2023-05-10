@@ -328,6 +328,12 @@ namespace mystl
         void destroy_and_recover(iterator first, iterator last, size_type n);
 
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief get new capacity
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        size_type get_new_cap(size_type add_size);
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief assign
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -338,6 +344,15 @@ namespace mystl
 
         template<typename FIter>
         void copy_assign(FIter first, FIter last, forward_iterator_tag);
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief reallocate
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        template<class... Args>
+        void reallocate_emplace(iterator pos, Args &&...args);
+
+        void reallocate_insert(iterator pos, const value_type &value);
 
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief shrink_to_fit函数
@@ -392,26 +407,30 @@ namespace mystl
     typename vector<T>::iterator vector<T>::emplace(const_iterator pos, Args &&...args)
     {
         MYSTL_DEBUG(pos >= begin() && pos <= end());
+        // xpos表示待插入位置
         auto xpos = const_cast<iterator>(pos);
         const size_type n = xpos - begin_;
-        // 当空间未满且插入元素在尾部时
         if (end_ != cap_ && xpos == end_)
         {
+            // 当空间未满且插入元素在尾部时, 直接在尾部调用construct
             data_allocator::construct(mystl::address_of(*end_), mystl::forward<Args>(args)...);
             ++end_;
         }
-        // 当空间未满且插入元素位置不在尾部时
         else if (end_ != cap_)
         {
+            // 当空间未满且插入元素不在尾部时
             auto new_end = end_;
+            // 首先在尾部构造一个副本，然后逆序依次拷贝
             data_allocator::construct(mystl::address_of(*end_), *(end_ - 1));
             ++new_end;
             mystl::copy_backward(xpos, end_ - 1, end_);
+            // 最后在xpos处赋新值
             *xpos = value_type(mystl::forward<Args>(args)...);
             end_ = new_end;
         }
         else
         {
+            // 如果空间已满，重新分配空间
             reallocate_emplace(xpos, mystl::forward<Args>(args)...);
         }
         return begin() + n;
@@ -505,6 +524,24 @@ namespace mystl
     }
 
     /// ================================================================================================================
+    /// @brief get new capacity
+    /// ================================================================================================================
+
+    template<typename T>
+    typename vector<T>::size_type vector<T>::get_new_cap(size_type add_size)
+    {
+        const auto old_size = capacity();
+        THROW_LENGTH_ERROR_IF(old_size > max_size() - add_size, "vector<T>'s size too big");
+        if (old_size > max_size() - old_size / 2)
+        {
+            return old_size + add_size > max_size() - 16 ? old_size + add_size : old_size + add_size + 16;
+        }
+        const size_type new_size = old_size == 0 ? mystl::max(add_size, static_cast<size_type>(16))
+                                                 : mystl::max(old_size + old_size / 2, old_size + add_size);
+        return new_size;
+    }
+
+    /// ================================================================================================================
     /// @brief assign辅助函数
     /// ================================================================================================================
 
@@ -570,6 +607,35 @@ namespace mystl
             data_allocator::destroy(new_end, end_);
             end_ = new_end;
         }
+    }
+
+    /// ================================================================================================================
+    /// @brief reallocate函数，重新分配空间
+    /// ================================================================================================================
+
+    template<class T>
+    template<class ...Args>
+    void vector<T>::reallocate_emplace(iterator pos, Args &&...args)
+    {
+        const auto new_size = get_new_cap(1);
+        auto new_begin = data_allocator::allocate(new_size);
+        auto new_end = new_begin;
+        try
+        {
+            new_end = mystl::uninitialized_move(begin_, pos, new_begin);
+            data_allocator::construct(mystl::address_of(*new_end), mystl::forward<Args>(args)...);
+            ++new_end;
+            new_end = mystl::uninitialized_move(pos, end_, new_end);
+        }
+        catch (...)
+        {
+            data_allocator::deallocate(new_begin, new_size);
+            throw;
+        }
+        destroy_and_recover(begin_, end_, cap_ - begin_);
+        begin_ = new_begin;
+        end_ = new_end;
+        cap_ = new_begin + new_size;
     }
 
     /// ================================================================================================================
