@@ -211,6 +211,57 @@ namespace mystl
     }
 
     /// ================================================================================================================
+    /// @brief copy_backward series
+    /// ================================================================================================================
+
+    template<typename BidirectionalIter1, typename BidirectionalIter2>
+    BidirectionalIter2 unchecked_copy_backward_cat(BidirectionalIter1 first, BidirectionalIter1 last,
+                                                   BidirectionalIter2 result, mystl::bidirectional_iterator_tag)
+    {
+        while (first != last)
+        {
+            *--result = *--last;
+        }
+        return result;
+    }
+
+    template<typename RandomIter1, typename BidirectionalIter2>
+    BidirectionalIter2 unchecked_copy_backward_cat(RandomIter1 first, RandomIter1 last,
+                                                   BidirectionalIter2 result, mystl::random_access_iterator_tag)
+    {
+        for (auto n = last - first; n > 0; --n)
+            *--result = *--last;
+        return result;
+    }
+
+    template<typename BidirectionalIter1, typename BidirectionalIter2>
+    BidirectionalIter2
+    unchecked_copy_backward(BidirectionalIter1 first, BidirectionalIter1 last, BidirectionalIter2 result)
+    {
+        return unchecked_copy_backward_cat(first, last, result, iterator_category(first));
+    }
+
+    template<typename Tp, typename Up>
+    typename std::enable_if<std::is_same<typename std::remove_const<Tp>::type, Up>::value &&
+                            std::is_trivially_copy_assignable<Up>::value, Up *>::type
+    unchecked_copy_backward(Tp *first, Tp *last, Up *result)
+    {
+        const auto n = static_cast<size_t>(last - first);
+        if (n != 0)
+        {
+            result -= n;
+            std::memmove(result, first, n * sizeof(Up));
+        }
+        return result;
+    }
+
+    template<typename BidirectionalIter1, typename BidirectionalIter2>
+    BidirectionalIter2 copy_backward(BidirectionalIter1 first, BidirectionalIter1 last, BidirectionalIter2 result)
+    {
+        return unchecked_copy_backward(first, last, result);
+    }
+
+    /// ================================================================================================================
     /// @brief move series
     /// ================================================================================================================
 

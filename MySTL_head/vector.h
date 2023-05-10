@@ -17,6 +17,7 @@
 #include "algobase.h"
 #include "uninitialized.h"
 #include "exceptdef.h"
+#include "memory.h"
 
 namespace mystl
 {
@@ -393,12 +394,13 @@ namespace mystl
         MYSTL_DEBUG(pos >= begin() && pos <= end());
         auto xpos = const_cast<iterator>(pos);
         const size_type n = xpos - begin_;
-        // 当插入位置在最后时
+        // 当空间未满且插入元素在尾部时
         if (end_ != cap_ && xpos == end_)
         {
             data_allocator::construct(mystl::address_of(*end_), mystl::forward<Args>(args)...);
             ++end_;
         }
+        // 当空间未满且插入元素位置不在尾部时
         else if (end_ != cap_)
         {
             auto new_end = end_;
