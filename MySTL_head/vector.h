@@ -297,6 +297,13 @@ namespace mystl
             copy_assign(ilist.begin(), ilist.end(), mystl::forward_iterator_tag{});
         }
 
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief emplace/emplace_back
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        template<typename... Args>
+        iterator emplace(const_iterator pos, Args &&...args);
+
         void swap(vector<T> &lhs) noexcept;
 
     private:
@@ -374,6 +381,39 @@ namespace mystl
     /// ================================================================================================================
     /// @brief 容器相关函数定义
     /// ================================================================================================================
+
+    /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    /// @brief emplace/emplace_back
+    /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    template<typename T>
+    template<typename ...Args>
+    typename vector<T>::iterator vector<T>::emplace(const_iterator pos, Args &&...args)
+    {
+        MYSTL_DEBUG(pos >= begin() && pos <= end());
+        auto xpos = const_cast<iterator>(pos);
+        const size_type n = xpos - begin_;
+        // 当插入位置在最后时
+        if (end_ != cap_ && xpos == end_)
+        {
+            data_allocator::construct(mystl::address_of(*end_), mystl::forward<Args>(args)...);
+            ++end_;
+        }
+        else if (end_ != cap_)
+        {
+            auto new_end = end_;
+            data_allocator::construct(mystl::address_of(*end_), *(end_ - 1));
+            ++new_end;
+            mystl::copy_backward(xpos, end_ - 1, end_);
+            *xpos = value_type(mystl::forward<Args>(args)...);
+            end_ = new_end;
+        }
+        else
+        {
+            reallocate_emplace(xpos, mystl::forward<Args>(args)...);
+        }
+        return begin() + n;
+    }
 
     template<typename T>
     void vector<T>::swap(vector<T> &lhs) noexcept
