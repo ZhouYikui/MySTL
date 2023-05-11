@@ -1067,6 +1067,24 @@ namespace mystl
         return rhs < lhs;
     }
 
+    template<typename T>
+    bool operator<=(const vector<T> &lhs, const vector<T> &rhs)
+    {
+        return !(rhs < lhs);
+    }
+
+    template<typename T>
+    bool operator>=(const vector<T> &lhs, const vector<T> &rhs)
+    {
+        return !(lhs < rhs);
+    }
+
+    template<typename T>
+    void swap(vector<T> &lhs, vector<T> &rhs)
+    {
+        lhs.swap(rhs);
+    }
+
 }
 
 #endif //MYSTL_VECTOR_H
