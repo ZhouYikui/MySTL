@@ -18,6 +18,7 @@
 #include "uninitialized.h"
 #include "exceptdef.h"
 #include "memory.h"
+#include "algo.h"
 
 namespace mystl
 {
