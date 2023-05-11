@@ -374,6 +374,11 @@ namespace mystl
 
         void resize(size_type new_size, const value_type &value);
 
+        void reverse()
+        {
+            mystl::reverse(begin(), end());
+        }
+
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief swap
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -600,6 +605,21 @@ namespace mystl
         data_allocator::destroy(mystl::move(r + (last - first), end_, r), end_);
         end_ = end_ - (last - first);
         return begin_ + n;
+    }
+
+    /// @brief resize
+
+    template<typename T>
+    void vector<T>::resize(size_type new_size, const value_type &value)
+    {
+        if (new_size < size())
+        {
+            erase(begin() + new_size, end());
+        }
+        else
+        {
+            insert(end(), new_size - size(), value);
+        }
     }
 
     /// @brief swap
