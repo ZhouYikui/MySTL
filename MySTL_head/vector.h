@@ -356,6 +356,24 @@ namespace mystl
 
         iterator erase(const_iterator pos);
 
+        iterator erase(const_iterator first, const_iterator last);
+
+        void clear()
+        {
+            erase(begin(), end());
+        }
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief resize/reverse
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void resize(size_type new_size)
+        {
+            return resize(new_size, value_type());
+        }
+
+        void resize(size_type new_size, const value_type &value);
+
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief swap
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -571,6 +589,17 @@ namespace mystl
         data_allocator::destroy(end_ - 1);
         --end_;
         return xpos;
+    }
+
+    template<typename T>
+    typename vector<T>::iterator vector<T>::erase(const_iterator first, const_iterator last)
+    {
+        MYSTL_DEBUG(first >= begin() && last <= end() && !(last < first));
+        const auto n = first - begin();
+        iterator r = begin_ + (first - begin());
+        data_allocator::destroy(mystl::move(r + (last - first), end_, r), end_);
+        end_ = end_ - (last - first);
+        return begin_ + n;
     }
 
     /// @brief swap
