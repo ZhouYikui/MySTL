@@ -342,6 +342,20 @@ namespace mystl
             MYSTL_DEBUG(pos >= begin() && pos <= end());
             return fill_insert(const_cast<iterator>(pos), n, value);
         }
+
+        template<typename Iter, typename std::enable_if<mystl::is_input_iterator<Iter>::value, int>::type = 0>
+        void insert(const_iterator pos, Iter first, Iter last)
+        {
+            MYSTL_DEBUG(pos >= begin() && pos <= end() && !(last < first));
+            copy_insert(const_cast<iterator>(pos), first, last);
+        }
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief erase/clear
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        iterator erase(const_iterator pos);
+
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief swap
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -400,6 +414,9 @@ namespace mystl
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         iterator fill_insert(iterator pos, size_type n, const value_type &value);
+
+        template<typename IIter>
+        void copy_insert(iterator pos, IIter first, IIter last);
 
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief shrink_to_fit函数
@@ -540,6 +557,19 @@ namespace mystl
             reallocate_insert(xpos, value);
         }
         return begin_ + n;
+    }
+
+    /// @brief erase
+
+    template<typename T>
+    typename vector<T>::iterator vector<T>::erase(const_iterator pos)
+    {
+        MYSTL_DEBUG(pos >= begin() && pos < end());
+        iterator xpos = begin_ + (pos - begin());
+        mystl::move(xpos + 1, end_, xpos);
+        data_allocator::destroy(end_ - 1);
+        --end_;
+        return xpos;
     }
 
     /// @brief swap
@@ -774,7 +804,7 @@ namespace mystl
     /// @brief insert辅助函数定义
     /// ================================================================================================================
 
-    /// @brief fill_insert
+    /// @brief fill_insert 插入指定数量的元素 value
 
     template<typename T>
     typename vector<T>::iterator vector<T>::fill_insert(iterator pos, size_type n, const value_type &value)
@@ -785,7 +815,7 @@ namespace mystl
         const value_type value_copy = value;
         if (static_cast<size_type>(cap_ - end_) >= n)
         {
-            // 如果备用空间大于等于增加的空间
+            // 如果备用空间足够
             const size_type after_elems = end_ - pos;
             auto old_end = end_;
             if (after_elems > n)
@@ -803,7 +833,8 @@ namespace mystl
             }
         }
         else
-        { // 如果备用空间不足
+        {
+            // 如果备用空间不足
             const auto new_size = get_new_cap(n);
             auto new_begin = data_allocator::allocate(new_size);
             auto new_end = new_begin;
@@ -824,6 +855,58 @@ namespace mystl
             cap_ = begin_ + new_size;
         }
         return begin_ + xpos;
+    }
+
+    /// @brief copy_insert 插入连续的元素
+
+    template<typename T>
+    template<typename IIter>
+    void vector<T>::copy_insert(iterator pos, IIter first, IIter last)
+    {
+        if (first == last) return;
+        const auto n = mystl::distance(first, last);
+        if ((cap_ - end_) >= n)
+        {
+            // 如果备用空间大小足够
+            const auto after_elems = end_ - pos;
+            auto old_end = end_;
+            if (after_elems > n)
+            {
+                end_ = mystl::uninitialized_copy(end_ - n, end_, end_);
+                mystl::move_backward(pos, old_end - n, old_end);
+                mystl::uninitialized_copy(first, last, pos);
+            }
+            else
+            {
+                auto mid = first;
+                mystl::advance(mid, after_elems);
+                end_ = mystl::uninitialized_copy(mid, last, end_);
+                end_ = mystl::uninitialized_move(pos, old_end, end_);
+                mystl::uninitialized_copy(first, mid, pos);
+            }
+        }
+        else
+        {
+            // 备用空间不足
+            const auto new_size = get_new_cap(n);
+            auto new_begin = data_allocator::allocate(new_size);
+            auto new_end = new_begin;
+            try
+            {
+                new_end = mystl::uninitialized_move(begin_, pos, new_begin);
+                new_end = mystl::uninitialized_copy(first, last, new_end);
+                new_end = mystl::uninitialized_move(pos, end_, new_end);
+            }
+            catch (...)
+            {
+                destroy_and_recover(new_begin, new_end, new_size);
+                throw;
+            }
+            data_allocator::deallocate(begin_, cap_ - begin_);
+            begin_ = new_begin;
+            end_ = new_end;
+            cap_ = begin_ + new_size;
+        }
     }
 
     /// ================================================================================================================
