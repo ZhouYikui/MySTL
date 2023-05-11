@@ -774,6 +774,8 @@ namespace mystl
     /// @brief insert辅助函数定义
     /// ================================================================================================================
 
+    /// @brief fill_insert
+
     template<typename T>
     typename vector<T>::iterator vector<T>::fill_insert(iterator pos, size_type n, const value_type &value)
     {
