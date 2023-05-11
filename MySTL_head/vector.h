@@ -1039,6 +1039,34 @@ namespace mystl
         return *this;
     }
 
+    /// ================================================================================================================
+    /// @brief 重载比较运算符
+    /// ================================================================================================================
+
+    template<typename T>
+    bool operator==(const vector<T> &lhs, const vector<T> &rhs)
+    {
+        return lhs.size() == rhs.size() && mystl::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+
+    template<typename T>
+    bool operator!=(const vector<T> &lhs, const vector<T> &rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+    template<class T>
+    bool operator<(const vector<T> &lhs, const vector<T> &rhs)
+    {
+        return mystl::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+    }
+
+    template<typename T>
+    bool operator>(const vector<T> &lhs, const vector<T> &rhs)
+    {
+        return rhs < lhs;
+    }
+
 }
 
 #endif //MYSTL_VECTOR_H
