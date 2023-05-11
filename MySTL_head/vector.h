@@ -566,6 +566,7 @@ namespace mystl
     {
         MYSTL_DEBUG(pos >= begin() && pos < end());
         iterator xpos = begin_ + (pos - begin());
+        // 从后往前覆盖
         mystl::move(xpos + 1, end_, xpos);
         data_allocator::destroy(end_ - 1);
         --end_;
