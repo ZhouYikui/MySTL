@@ -14,6 +14,7 @@
 #define MYSTL_LIST_H
 
 #include "util.h"
+#include "iterator.h"
 
 namespace mystl
 {
@@ -26,6 +27,7 @@ namespace mystl
     template<typename T>
     struct list_node;
 
+    /// @brief 定义了两个别名，分别是指向 list_node_bast<T> 和 list_node<T> 的指针
     template<typename T>
     struct node_traits
     {
@@ -33,6 +35,7 @@ namespace mystl
         typedef list_node<T> *node_ptr;
     };
 
+    /// @brief 链表节点的基类，提供了链表节点的常见操作
     template<typename T>
     struct list_node_base
     {
@@ -44,29 +47,33 @@ namespace mystl
 
         list_node_base() = default;
 
+        /// @brief 返回派生类型节点指针
         node_ptr as_node()
         {
             return static_cast<node_ptr>(self());
         }
 
+        /// @brief 用于删除节点
         void unlink()
         {
             prev = next = self();
         }
 
+        /// @brief 为了保证as_node正常工作，需要将派生类指针转为基类指针
         base_ptr self()
         {
             return static_cast<base_ptr>(&*this);
         }
     };
 
+    /// 链表节点的派生类，增加了value
     template<typename T>
     struct list_node : public list_node_base<T>
     {
         typedef typename node_traits<T>::base_ptr base_ptr;
         typedef typename node_traits<T>::node_ptr node_ptr;
 
-        T value;  // 数据域
+        T value;
 
         list_node() = default;
 
@@ -83,6 +90,73 @@ namespace mystl
         {
             return static_cast<node_ptr>(&*this);
         }
+    };
+
+    /// ================================================================================================================
+    /// @brief list 迭代器
+    /// ================================================================================================================
+
+    template<class T>
+    struct list_iterator : public mystl::iterator<mystl::bidirectional_iterator_tag, T>
+    {
+        typedef T value_type;
+        typedef T *pointer;
+        typedef T &reference;
+        typedef typename node_traits<T>::base_ptr base_ptr;
+        typedef typename node_traits<T>::node_ptr node_ptr;
+        typedef list_iterator<T> self;
+
+        base_ptr node_;  // 指向当前节点
+
+        // 构造函数
+        list_iterator() = default;
+
+        list_iterator(base_ptr x)
+                : node_(x) {}
+
+        list_iterator(node_ptr x)
+                : node_(x->as_base()) {}
+
+        list_iterator(const list_iterator &rhs)
+                : node_(rhs.node_) {}
+
+        // 重载操作符
+        reference operator*() const { return node_->as_node()->value; }
+
+        pointer operator->() const { return &(operator*()); }
+
+        self &operator++()
+        {
+            MYSTL_DEBUG(node_ != nullptr);
+            node_ = node_->next;
+            return *this;
+        }
+
+        self operator++(int)
+        {
+            self tmp = *this;
+            ++*this;
+            return tmp;
+        }
+
+        self &operator--()
+        {
+            MYSTL_DEBUG(node_ != nullptr);
+            node_ = node_->prev;
+            return *this;
+        }
+
+        self operator--(int)
+        {
+            self tmp = *this;
+            --*this;
+            return tmp;
+        }
+
+        // 重载比较操作符
+        bool operator==(const self &rhs) const { return node_ == rhs.node_; }
+
+        bool operator!=(const self &rhs) const { return node_ != rhs.node_; }
     };
 
 }
