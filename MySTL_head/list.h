@@ -165,9 +165,99 @@ namespace mystl
         }
 
         // 重载比较操作符
-        bool operator==(const self &rhs) const { return node_ == rhs.node_; }
+        bool operator==(const self &lhs) const
+        {
+            return node_ == lhs.node_;
+        }
 
-        bool operator!=(const self &rhs) const { return node_ != rhs.node_; }
+        bool operator!=(const self &lhs) const
+        {
+            return node_ != lhs.node_;
+        }
+    };
+
+    /// ================================================================================================================
+    /// @brief const list 迭代器 继承自iterator
+    /// ================================================================================================================
+
+    template<typename T>
+    struct list_const_iterator : public iterator<bidirectional_iterator_tag, T>
+    {
+        typedef T value_type;
+        typedef const T *pointer;
+        typedef const T &reference;
+        typedef typename node_traits<T>::base_ptr base_ptr;
+        typedef typename node_traits<T>::node_ptr node_ptr;
+        typedef list_const_iterator<T> self;
+
+        /// value
+        base_ptr node_;
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 构造函数
+        /// ------------------------------------------------------------------------------------------------------------
+
+        list_const_iterator() = default;
+
+        explicit list_const_iterator(base_ptr x) : node_(x) {}
+
+        explicit list_const_iterator(node_ptr x) : node_(x->as_base()) {}
+
+        explicit list_const_iterator(const list_iterator<T> &lhs) : node_(lhs.node_) {}
+
+        list_const_iterator(const list_const_iterator &lhs) : node_(lhs.node_) {}
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 操作符重载
+        /// ------------------------------------------------------------------------------------------------------------
+
+        reference operator*() const
+        {
+            return node_->as_node()->value;
+        }
+
+        pointer operator->() const
+        {
+            return &(operator*());
+        }
+
+        self &operator++()
+        {
+            MYSTL_DEBUG(node_ != nullptr);
+            node_ = node_->next;
+            return *this;
+        }
+
+        self operator++(int)
+        {
+            self tmp = *this;
+            ++*this;
+            return tmp;
+        }
+
+        self &operator--()
+        {
+            MYSTL_DEBUG(node_ != nullptr);
+            node_ = node_->prev;
+            return *this;
+        }
+
+        self operator--(int)
+        {
+            self tmp = *this;
+            --*this;
+            return tmp;
+        }
+
+        bool operator==(const self &rhs) const
+        {
+            return node_ == rhs.node_;
+        }
+
+        bool operator!=(const self &rhs) const
+        {
+            return node_ != rhs.node_;
+        }
     };
 
 }
