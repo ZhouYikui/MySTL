@@ -81,6 +81,7 @@ namespace mystl
 
         list_node(T &&v) : value(mystl::move(v)) {}
 
+        /// @brief 返回基类指针
         base_ptr as_base()
         {
             return static_cast<base_ptr>(&*this);
@@ -93,12 +94,13 @@ namespace mystl
     };
 
     /// ================================================================================================================
-    /// @brief list 迭代器
+    /// @brief list 迭代器 继承自iterator
     /// ================================================================================================================
 
-    template<class T>
+    template<typename T>
     struct list_iterator : public mystl::iterator<mystl::bidirectional_iterator_tag, T>
     {
+        /// 首先定义了六个别名
         typedef T value_type;
         typedef T *pointer;
         typedef T &reference;
@@ -106,24 +108,33 @@ namespace mystl
         typedef typename node_traits<T>::node_ptr node_ptr;
         typedef list_iterator<T> self;
 
-        base_ptr node_;  // 指向当前节点
+        /// node_ 指向当前节点的base指针
+        base_ptr node_;
 
-        // 构造函数
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 构造函数
+        /// ------------------------------------------------------------------------------------------------------------
         list_iterator() = default;
 
-        list_iterator(base_ptr x)
-                : node_(x) {}
+        explicit list_iterator(base_ptr x) : node_(x) {}
 
-        list_iterator(node_ptr x)
-                : node_(x->as_base()) {}
+        explicit list_iterator(node_ptr x) : node_(x->as_base()) {}
 
-        list_iterator(const list_iterator &rhs)
-                : node_(rhs.node_) {}
+        list_iterator(const list_iterator &lhs) : node_(lhs.node_) {}
 
-        // 重载操作符
-        reference operator*() const { return node_->as_node()->value; }
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 操作符重载
+        /// ------------------------------------------------------------------------------------------------------------
+        reference operator*() const
+        {
+            return node_->as_node()->value;
+        }
 
-        pointer operator->() const { return &(operator*()); }
+        /// 返回指向value的指针
+        pointer operator->() const
+        {
+            return &(operator*());
+        }
 
         self &operator++()
         {
