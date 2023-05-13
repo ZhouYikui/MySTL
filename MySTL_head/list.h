@@ -15,6 +15,7 @@
 
 #include "util.h"
 #include "iterator.h"
+#include "allocator.h"
 
 namespace mystl
 {
@@ -259,6 +260,123 @@ namespace mystl
             return node_ != rhs.node_;
         }
     };
+
+    /// ================================================================================================================
+    /// @brief 模板类 list
+    /// ================================================================================================================
+    template<typename T>
+    class list
+    {
+    public:
+        typedef mystl::allocator<T> allocator_type;
+        typedef mystl::allocator<T> data_allocator;
+        typedef mystl::allocator<list_node_base<T>> base_allocator;
+        typedef mystl::allocator<list_node<T>> node_allocator;
+
+        typedef typename allocator_type::value_type value_type;
+        typedef typename allocator_type::pointer pointer;
+        typedef typename allocator_type::const_pointer const_pointer;
+        typedef typename allocator_type::reference reference;
+        typedef typename allocator_type::const_reference const_reference;
+        typedef typename allocator_type::size_type size_type;
+        typedef typename allocator_type::difference_type difference_type;
+
+        typedef list_iterator<T> iterator;
+        typedef list_const_iterator<T> const_iterator;
+        typedef mystl::reverse_iterator<iterator> reverse_iterator;
+        typedef mystl::reverse_iterator<const_iterator> const_reverse_iterator;
+
+        typedef typename node_traits<T>::base_ptr base_ptr;
+        typedef typename node_traits<T>::node_ptr node_ptr;
+
+        allocator_type get_allocator() { return node_allocator(); }
+
+    private:
+        base_ptr node_;
+        size_type size_;
+
+    public:
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 构造函数
+        /// ------------------------------------------------------------------------------------------------------------
+        list()
+        {
+            fill_init(0, value_type());
+        }
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 容器相关操作
+        /// ------------------------------------------------------------------------------------------------------------
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief erase/clear
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void clear();
+
+
+    private:
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief helper function
+        /// ------------------------------------------------------------------------------------------------------------
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief 初始化/回收函数
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void fill_init(size_type n, const value_type &value);
+
+    };
+
+    /// ================================================================================================================
+    /// @brief 容器相关操作
+    /// ================================================================================================================
+
+    /// @brief clear
+
+    template<typename T>
+    void list<T>::clear()
+    {
+        if (size_ != 0)
+        {
+            auto cur = node_->next;
+            for (base_ptr next = cur->next; cur != node_; cur = next, next = cur->next)
+            {
+                destroy_node(cur->as_node());
+            }
+            node_->unlink();
+            size_ = 0;
+        }
+    }
+
+    /// ================================================================================================================
+    /// @brief helper function
+    /// ================================================================================================================
+
+    /// @brief fill init
+
+    template<typename T>
+    void list<T>::fill_init(size_type n, const value_type &value)
+    {
+        node_ = base_allocator::allocate(1);
+        node_->unlink();
+        size_ = n;
+        try
+        {
+            for (; n > 0; --n)
+            {
+                auto node = create_node(value);
+                link_nodes_at_back(node->as_base(), node->as_base());
+            }
+        }
+        catch (...)
+        {
+            clear();
+            base_allocator::deallocate(node_);
+            node_ = nullptr;
+            throw;
+        }
+    }
 
 }
 
