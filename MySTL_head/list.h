@@ -13,6 +13,7 @@
 #ifndef MYSTL_LIST_H
 #define MYSTL_LIST_H
 
+#include <initializer_list>
 #include "util.h"
 #include "iterator.h"
 #include "allocator.h"
@@ -293,6 +294,7 @@ namespace mystl
         allocator_type get_allocator() { return node_allocator(); }
 
     private:
+        // 指向末尾节点
         base_ptr node_;
         size_type size_;
 
@@ -321,9 +323,84 @@ namespace mystl
             copy_init(first, last);
         }
 
+        list(std::initializer_list<T> ilist)
+        {
+            copy_init(ilist.begin(), ilist.end());
+        }
+
+        list(const list &lhs)
+        {
+            copy_init(lhs.cbegin(), lhs.cend());
+        }
+
+        list(list &&rhs) noexcept: node_(rhs.node_), size_(rhs.size_)
+        {
+            rhs.node_ = nullptr;
+            rhs.size_ = 0;
+        }
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 操作符重载
+        /// ------------------------------------------------------------------------------------------------------------
+
+        list &operator=(const list &lhs)
+        {
+            if (this != &lhs)
+            {
+                assign(lhs.begin(), lhs.end());
+            }
+            return *this;
+        }
+
+    public:
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 迭代器相关操作
+        /// ------------------------------------------------------------------------------------------------------------
+
+        iterator begin() noexcept
+        {
+            return node_->next;
+        }
+
+        const_iterator begin() const noexcept
+        {
+            return node_->next;
+        }
+
+        iterator end() noexcept
+        {
+            return node_;
+        }
+
+        const_iterator end() const noexcept
+        {
+            return node_;
+        }
+
         /// ------------------------------------------------------------------------------------------------------------
         /// @brief 容器相关操作
         /// ------------------------------------------------------------------------------------------------------------
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief assign
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void assign(size_type n, const value_type &value)
+        {
+            fill_assign(n, value);
+        }
+
+        template<class Iter, typename std::enable_if<mystl::is_input_iterator<Iter>::value, int>::type = 0>
+        void assign(Iter first, Iter last)
+        {
+            copy_assign(first, last);
+        }
+
+        void assign(std::initializer_list<T> ilist)
+        {
+            copy_assign(ilist.begin(), ilist.end());
+        }
 
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief erase/clear
@@ -360,6 +437,15 @@ namespace mystl
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         void link_nodes_at_back(base_ptr first, base_ptr last);
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief assign
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void fill_assign(size_type n, const value_type &value);
+
+        template<typename Iter>
+        void copy_assign(Iter first, Iter last);
 
     };
 
@@ -470,7 +556,7 @@ namespace mystl
         }
     }
 
-    /// @brief link_node_at_back
+    /// @brief link_node_at_back，将一段插入节点到末尾， node_prev是最后一个有效节点
 
     template<typename T>
     void list<T>::link_nodes_at_back(base_ptr first, base_ptr last)
@@ -479,6 +565,15 @@ namespace mystl
         first->prev = node_->prev;
         first->prev->next = first;
         node_->prev = last;
+    }
+
+    /// @brief fill_assign，用n个value为容器赋值
+
+    template<typename T>
+    void list<T>::fill_assign(size_type n, const value_type &value)
+    {
+        auto b = begin();
+        auto e = end();
     }
 
 }
