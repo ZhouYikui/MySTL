@@ -18,6 +18,7 @@
 #include "iterator.h"
 #include "allocator.h"
 #include "memory.h"
+#include "exceptdef.h"
 
 namespace mystl
 {
@@ -358,24 +359,75 @@ namespace mystl
         /// @brief 迭代器相关操作
         /// ------------------------------------------------------------------------------------------------------------
 
-        iterator begin() noexcept
+        iterator begin() noexcept { return node_->next; }
+
+        const_iterator begin() const noexcept { return node_->next; }
+
+        iterator end() noexcept { return node_; }
+
+        const_iterator end() const noexcept { return node_; }
+
+        reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
+
+        const_reverse_iterator rbegin() const noexcept { return reverse_iterator(end()); }
+
+        reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
+
+        const_reverse_iterator rend() const noexcept { return reverse_iterator(begin()); }
+
+        const_iterator cbegin() const noexcept { return begin(); }
+
+        const_iterator cend() const noexcept { return end(); }
+
+        const_reverse_iterator crbegin() const noexcept { return rbegin(); }
+
+        const_reverse_iterator crend() const noexcept { return rend(); }
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 容量相关操作
+        /// ------------------------------------------------------------------------------------------------------------
+
+        bool empty() const noexcept
         {
-            return node_->next;
+            return node_->next == node_;
         }
 
-        const_iterator begin() const noexcept
+        size_type size() const noexcept
         {
-            return node_->next;
+            return size_;
         }
 
-        iterator end() noexcept
+        size_type max_size() const noexcept
         {
-            return node_;
+            return static_cast<size_type>(-1);
         }
 
-        const_iterator end() const noexcept
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief 访问元素相关操作
+        /// ------------------------------------------------------------------------------------------------------------
+
+        reference front()
         {
-            return node_;
+            MYSTL_DEBUG(!empty());
+            return *begin();
+        }
+
+        const_reference front() const
+        {
+            MYSTL_DEBUG(!empty());
+            return *begin();
+        }
+
+        reference back()
+        {
+            MYSTL_DEBUG(!empty());
+            return *(--end());
+        }
+
+        const_reference back() const
+        {
+            MYSTL_DEBUG(!empty());
+            return *(--end());
         }
 
         /// ------------------------------------------------------------------------------------------------------------
@@ -391,7 +443,7 @@ namespace mystl
             fill_assign(n, value);
         }
 
-        template<class Iter, typename std::enable_if<mystl::is_input_iterator<Iter>::value, int>::type = 0>
+        template<typename Iter, typename std::enable_if<mystl::is_input_iterator<Iter>::value, int>::type = 0>
         void assign(Iter first, Iter last)
         {
             copy_assign(first, last);
@@ -574,6 +626,18 @@ namespace mystl
     {
         auto b = begin();
         auto e = end();
+        for (; n > 0 && b != e; --n, ++b)
+        {
+            *b = value;
+        }
+        if (n > 0)
+        {
+            insert(e, n, value);
+        }
+        else
+        {
+            erase(b, e);
+        }
     }
 
 }
