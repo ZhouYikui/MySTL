@@ -16,6 +16,7 @@
 #include "util.h"
 #include "iterator.h"
 #include "allocator.h"
+#include "memory.h"
 
 namespace mystl
 {
@@ -304,6 +305,22 @@ namespace mystl
             fill_init(0, value_type());
         }
 
+        explicit list(size_type n)
+        {
+            fill_init(n, value_type());
+        }
+
+        list(size_type n, const T &value)
+        {
+            fill_init(n, value);
+        }
+
+        template<class Iter, typename std::enable_if<mystl::is_input_iterator<Iter>::value, int>::type = 0>
+        list(Iter first, Iter last)
+        {
+            copy_init(first, last);
+        }
+
         /// ------------------------------------------------------------------------------------------------------------
         /// @brief 容器相关操作
         /// ------------------------------------------------------------------------------------------------------------
@@ -321,10 +338,28 @@ namespace mystl
         /// ------------------------------------------------------------------------------------------------------------
 
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief create/destroy node
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        template<typename ...Args>
+        node_ptr create_node(Args &&...args);
+
+        void destroy_node(node_ptr p);
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief 初始化/回收函数
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         void fill_init(size_type n, const value_type &value);
+
+        template<typename Iter>
+        void copy_init(Iter first, Iter last);
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief link/unlink
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void link_nodes_at_back(base_ptr first, base_ptr last);
 
     };
 
@@ -332,7 +367,7 @@ namespace mystl
     /// @brief 容器相关操作
     /// ================================================================================================================
 
-    /// @brief clear
+    /// @brief clear, 用于清空链表
 
     template<typename T>
     void list<T>::clear()
@@ -352,6 +387,36 @@ namespace mystl
     /// ================================================================================================================
     /// @brief helper function
     /// ================================================================================================================
+
+    /// @brief creator_node
+
+    template<typename T>
+    template<typename ...Args>
+    typename list<T>::node_ptr list<T>::create_node(Args &&...args)
+    {
+        node_ptr p = node_allocator::allocate(1);
+        try
+        {
+            data_allocator::construct(mystl::address_of(p->value), mystl::forward<Args>(args)...);
+            p->prev = nullptr;
+            p->next = nullptr;
+        }
+        catch (...)
+        {
+            node_allocator::deallocate(p);
+            throw;
+        }
+        return p;
+    }
+
+    /// @brief destroy_node
+
+    template<typename T>
+    void list<T>::destroy_node(node_ptr p)
+    {
+        data_allocator::destroy(mystl::address_of(p->value));
+        node_allocator::deallocate(p);
+    }
 
     /// @brief fill init
 
@@ -376,6 +441,44 @@ namespace mystl
             node_ = nullptr;
             throw;
         }
+    }
+
+    /// @brief copy init
+
+    template<typename T>
+    template<typename Iter>
+    void list<T>::copy_init(Iter first, Iter last)
+    {
+        node_ = base_allocator::allocate(1);
+        node_->unlink();
+        size_type n = mystl::distance(first, last);
+        size_ = n;
+        try
+        {
+            for (; n > 0; --n, ++first)
+            {
+                auto node = create_node(*first);
+                link_nodes_at_back(node->as_base(), node->as_base());
+            }
+        }
+        catch (...)
+        {
+            clear();
+            base_allocator::deallocate(node_);
+            node_ = nullptr;
+            throw;
+        }
+    }
+
+    /// @brief link_node_at_back
+
+    template<typename T>
+    void list<T>::link_nodes_at_back(base_ptr first, base_ptr last)
+    {
+        last->next = node_;
+        first->prev = node_->prev;
+        first->prev->next = first;
+        node_->prev = last;
     }
 
 }
