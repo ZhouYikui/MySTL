@@ -353,6 +353,31 @@ namespace mystl
             return *this;
         }
 
+        list &operator=(list &&rhs) noexcept
+        {
+            clear();
+            splice(end(), rhs);
+            return *this;
+        }
+
+        list &operator=(std::initializer_list<T> ilist)
+        {
+            list tmp(ilist.begin(), ilist.end());
+            swap(tmp);
+            return *this;
+        }
+
+        ~list()
+        {
+            if (node_)
+            {
+                clear();
+                base_allocator::deallocate(node_);
+                node_ = nullptr;
+                size_ = 0;
+            }
+        }
+
     public:
 
         /// ------------------------------------------------------------------------------------------------------------
