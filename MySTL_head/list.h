@@ -512,6 +512,18 @@ namespace mystl
         }
 
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief intsert
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        iterator insert(const_iterator pos, const value_type &value)
+        {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - 1, "list<T>'s size too big");
+            auto link_node = create_node(value);
+            ++size_;
+            return link_iter_node(pos, link_node->as_base());
+        }
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief erase/clear
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -544,6 +556,8 @@ namespace mystl
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief link/unlink
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        iterator link_iter_node(const_iterator pos, base_ptr link_node);
 
         void link_nodes(base_ptr pos, base_ptr first, base_ptr last);
 
@@ -667,6 +681,26 @@ namespace mystl
             node_ = nullptr;
             throw;
         }
+    }
+
+    /// @brief link_iter_node
+
+    template<typename T>
+    typename list<T>::iterator list<T>::link_iter_node(const_iterator pos, base_ptr link_node)
+    {
+        if (pos == node_->next)
+        {
+            link_nodes_at_front(link_node, link_node);
+        }
+        else if (pos == node_)
+        {
+            link_nodes_at_back(link_node, link_node);
+        }
+        else
+        {
+            link_nodes(pos.node_, link_node, link_node);
+        }
+        return iterator(link_node);
     }
 
     /// @brief link_nodes
