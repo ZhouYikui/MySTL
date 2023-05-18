@@ -480,6 +480,38 @@ namespace mystl
         }
 
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief emplace_front / emplace_back / emplace
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        template<typename ...Args>
+        void emplace_front(Args &&...args)
+        {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - 1, "list<T>'s size too big");
+            auto link_node = create_node(mystl::forward<Args>(args)...);
+            link_nodes_at_front(link_node->as_base(), link_node->as_base());
+            ++size_;
+        }
+
+        template<typename ...Args>
+        void emplace_back(Args &&...args)
+        {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - 1, "list<T>'s size too big");
+            auto link_node = create_node(mystl::forward<Args>(args)...);
+            link_nodes_at_back(link_node->as_base(), link_node->as_base());
+            ++size_;
+        }
+
+        template<typename ...Args>
+        iterator emplace(const_iterator pos, Args &&...args)
+        {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - 1, "list<T>'s size too big");
+            auto link_node = create_node(mystl::forward<Args>(args)...);
+            link_nodes(pos.node_, link_node->as_base(), link_node->as_base());
+            ++size_;
+            return iterator(link_node);
+        }
+
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief erase/clear
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -512,6 +544,10 @@ namespace mystl
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /// @brief link/unlink
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void link_nodes(base_ptr pos, base_ptr first, base_ptr last);
+
+        void link_nodes_at_front(base_ptr first, base_ptr last);
 
         void link_nodes_at_back(base_ptr first, base_ptr last);
 
@@ -631,6 +667,28 @@ namespace mystl
             node_ = nullptr;
             throw;
         }
+    }
+
+    /// @brief link_nodes
+
+    template<typename T>
+    void list<T>::link_nodes(base_ptr pos, base_ptr first, base_ptr last)
+    {
+        pos->prev->next = first;
+        first->prev = pos->pre;
+        pos->prev = last;
+        last->next = pos;
+    }
+
+    /// @brief link_node_at_front
+
+    template<typename T>
+    void list<T>::link_nodes_at_front(base_ptr first, base_ptr last)
+    {
+        first->prev = node_;
+        last->next = node_->next;
+        node_->next->prev = last;
+        node_->next = first;
     }
 
     /// @brief link_node_at_back，将一段插入节点到末尾， node_prev是最后一个有效节点
