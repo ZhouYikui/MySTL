@@ -512,7 +512,7 @@ namespace mystl
         }
 
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        /// @brief intsert
+        /// @brief intsert 区分左值右值
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         iterator insert(const_iterator pos, const value_type &value)
@@ -521,6 +521,20 @@ namespace mystl
             auto link_node = create_node(value);
             ++size_;
             return link_iter_node(pos, link_node->as_base());
+        }
+
+        iterator insert(const_iterator pos, value_type &&value)
+        {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - 1, "list<T>'s size too big");
+            auto link_node = create_node(mystl::move(value));
+            ++size_;
+            return link_iter_node(pos, link_node->as_base());
+        }
+
+        iterator insert(const_iterator pos, size_type n, const value_type &value)
+        {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - n, "list<T>'s size too big");
+            return fill_insert(pos, n, value);
         }
 
         /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
