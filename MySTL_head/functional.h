@@ -40,6 +40,13 @@ namespace mystl
     {
         bool operator()(const T &x, const T &y) const { return x == y; }
     };
+
+    /// @brief 函数对象，小于
+    template <typename T>
+    struct less :public binary_function<T, T, bool>
+    {
+        bool operator()(const T& x, const T& y) const { return x < y; }
+    };
 }
 
 #endif //MYSTL_FUNCTIONAL_H
