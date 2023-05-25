@@ -660,6 +660,34 @@ namespace mystl
 
     /// @brief erase
 
+    template<typename T>
+    typename list<T>::iterator list<T>::erase(const_iterator pos)
+    {
+        MYSTL_DEBUG(pos != cend());
+        auto n = pos.node_;
+        auto next = n->next;
+        unlink_nodes(n, n);
+        destroy_node(n->as_node());
+        --size_;
+        return iterator(next);
+    }
+
+    template<typename T>
+    typename list<T>::iterator list<T>::erase(const_iterator first, const_iterator last)
+    {
+        if (first != last)
+        {
+            unlink_nodes(first.node_, last.node_->prev);
+            while (first != last)
+            {
+                auto cur = first.node_;
+                ++first;
+                destroy_node(cur->as_node());
+                --size_;
+            }
+        }
+        return iterator(last.node_);
+    }
 
 
     /// @brief clear, 用于清空链表
