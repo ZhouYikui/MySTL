@@ -841,6 +841,22 @@ namespace mystl
         }
     }
 
+    template<typename T>
+    template<typename UnaryPredicate>
+    void list<T>::remove_if(UnaryPredicate pred)
+    {
+        auto f = begin();
+        auto l = end();
+        for (auto next = f; f != l; f = next)
+        {
+            ++next;
+            if (pred(*f))
+            {
+                erase(f);
+            }
+        }
+    }
+
     /// ================================================================================================================
     /// @brief helper function
     /// ================================================================================================================
