@@ -607,6 +607,60 @@ namespace mystl
 
         void clear();
 
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        /// @brief resize
+        /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        void resize(size_type new_size)
+        {
+            resize(new_size, value_type());
+        }
+
+        void resize(size_type new_size, const value_type &value);
+
+        void swap(list &rhs) noexcept
+        {
+            mystl::swap(node_, rhs.node_);
+            mystl::swap(size_, rhs.size_);
+        }
+
+        /// ------------------------------------------------------------------------------------------------------------
+        /// @brief list相关操作
+        /// ------------------------------------------------------------------------------------------------------------
+
+        void splice(const_iterator pos, list &other);
+
+        void splice(const_iterator pos, list &other, const_iterator it);
+
+        void splice(const_iterator pos, list &other, const_iterator first, const_iterator last);
+
+        void remove(const value_type &value)
+        {
+            remove_if([&](const value_type &v)
+                      {
+                          return v == value;
+                      });
+        }
+
+        template<class UnaryPredicate>
+        void remove_if(UnaryPredicate pred);
+
+        void unique() { unique(mystl::equal_to<T>()); }
+
+        template<class BinaryPredicate>
+        void unique(BinaryPredicate pred);
+
+        void merge(list &x) { merge(x, mystl::less<T>()); }
+
+        template<class Compare>
+        void merge(list &x, Compare comp);
+
+        void sort() { list_sort(begin(), end(), size(), mystl::less<T>()); }
+
+        template<class Compared>
+        void sort(Compared comp) { list_sort(begin(), end(), size(), comp); }
+
+        void reverse();
 
     private:
         /// ------------------------------------------------------------------------------------------------------------
@@ -704,6 +758,86 @@ namespace mystl
             }
             node_->unlink();
             size_ = 0;
+        }
+    }
+
+    /// @brief resize
+
+    template<typename T>
+    void list<T>::resize(size_type new_size, const value_type &value)
+    {
+        auto i = begin();
+        size_type len = 0;
+        while (i != end() && len < new_size)
+        {
+            ++i;
+            ++len;
+        }
+        if (len == new_size)
+        {
+            erase(i, node_);
+        }
+        else
+        {
+            insert(node_, new_size - len, value);
+        }
+    }
+
+    /// ================================================================================================================
+    /// @brief list相关操作
+    /// ================================================================================================================
+
+    template<typename T>
+    void list<T>::splice(const_iterator pos, list &x)
+    {
+        MYSTL_DEBUG(this != &x);
+        if (!x.empty())
+        {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - x.size_, "list<T>'s size too big");
+
+            auto f = x.node_->next;
+            auto l = x.node_->prev;
+
+            x.unlink_nodes(f, l);
+            link_nodes(pos.node_, f, l);
+
+            size_ += x.size_;
+            x.size_ = 0;
+        }
+    }
+
+    template<typename T>
+    void list<T>::splice(const_iterator pos, list &x, const_iterator it)
+    {
+        if (pos.node_ != it.node_ && pos.node_ != it.node_->next)
+        {
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - 1, "list<T>'s size too big");
+
+            auto f = it.node_;
+
+            x.unlink_nodes(f, f);
+            link_nodes(pos.node_, f, f);
+
+            ++size_;
+            --x.size_;
+        }
+    }
+
+    template<typename T>
+    void list<T>::splice(const_iterator pos, list &x, const_iterator first, const_iterator last)
+    {
+        if (first != last && this != &x)
+        {
+            size_type n = mystl::distance(first, last);
+            THROW_LENGTH_ERROR_IF(size_ > max_size() - n, "list<T>'s size too big");
+            auto f = first.node_;
+            auto l = last.node_->prev;
+
+            x.unlink_nodes(f, l);
+            link_nodes(pos.node_, f, l);
+
+            size_ += n;
+            x.size_ -= n;
         }
     }
 
