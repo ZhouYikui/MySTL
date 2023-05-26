@@ -13,6 +13,11 @@
 #ifndef MYSTL_DEQUE_H
 #define MYSTL_DEQUE_H
 
+#include <initializer_list>
 
+#include "iterator.h"
+#include "memory.h"
+#include "util.h"
+#include "exceptdef.h"
 
 #endif //MYSTL_DEQUE_H
